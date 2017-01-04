@@ -34,7 +34,7 @@ alternatively, it'll try `.renderizer.yaml` in the current directory.
 
 Generate the dev pod.yaml (after `cd test/`):
 
-    renderizer pod.yaml --deployment=dev
+    renderizer --deployment=dev pod.yaml
 
 ## Configuration
 
