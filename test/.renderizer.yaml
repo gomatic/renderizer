@@ -1,0 +1,14 @@
+Name: Renderizer
+Deployment: master
+App: &App Gomatic
+Repo: &Repo github
+Base: 100
+Containers:
+- Name: one
+  Repo: *Repo
+  App: *App
+  Port: 312
+- Name: two
+  Repo: *Repo
+  App: *App
+  Port: 123
