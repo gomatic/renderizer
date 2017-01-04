@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"gopkg.in/yaml.v1"
+	"gopkg.in/yaml.v2"
 )
 
 func usage(out io.Writer) {

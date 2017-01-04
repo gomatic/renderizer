@@ -4,5 +4,6 @@
 !Makefile
 !*.go
 !*.yaml
+!*.yml
 !*.md
 !*/

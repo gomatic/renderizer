@@ -1,5 +1,7 @@
 # renderizer
 
+[![Build Status](https://travis-ci.org/gomatic/renderizer.svg?branch=master)](https://travis-ci.org/gomatic/renderizer)
+
 Render Go text templates from the command line.
 
     go get github.com/gomatic/renderizer
@@ -8,7 +10,7 @@ Supports providing top-level name/value pairs on the command line:
 
     renderizer --name=value --top=first template-file
 
-**NOTE:** that _all_ parameter values are provided `name=value`. 
+**NOTE:** that _all_ parameter values are provided `name=value`.
 
 ## Example
 
@@ -21,9 +23,9 @@ First:
 Generate the master pod.yaml:
 
     renderizer -S=test/.renderizer.yaml test/pod.yaml
- 
+
  or, set `RENDERIZER` in the environment:
- 
+
     RENDERIZER=test/.renderizer.yaml renderizer test/pod.yaml
 
 alternatively, it'll try `.renderizer.yaml` in the current directory.
@@ -47,7 +49,7 @@ Settings can be loaded from a yaml:
 This is a positional toggle flag.
 
 Variable names are converted to title case by default. It can be disabled for any subsequent variables:
- 
+
     renderizer --name=value -C --top=first template-file
 
 Sets:
