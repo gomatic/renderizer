@@ -12,21 +12,27 @@ Supports providing top-level name/value pairs on the command line:
 
 ## Example
 
+First:
+
+    git clone https://github.com/gomatic/renderizer.git
+    cd renderizer
+    go build
+
 Generate the master pod.yaml:
 
-     renderizer -S=test/.renderizer.yaml test/pod.yaml
+    renderizer -S=test/.renderizer.yaml test/pod.yaml
  
  or, set `RENDERIZER` in the environment:
  
-     RENDERIZER=test/.renderizer.yaml renderizer test/pod.yaml
+    RENDERIZER=test/.renderizer.yaml renderizer test/pod.yaml
 
 alternatively, it'll try `.renderizer.yaml` in the current directory.
 
-     (cd test; renderizer pod.yaml)
+    (cd test; renderizer pod.yaml)
 
 Generate the dev pod.yaml (after `cd test/`):
 
-      renderizer pod.yaml --deployment=dev
+    renderizer pod.yaml --deployment=dev
 
 ## Configuration
 

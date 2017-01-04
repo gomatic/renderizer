@@ -121,6 +121,7 @@ func main() {
 	switch settings.MissingKey {
 	case "zero", "error", "default", "invalid":
 	default:
+		fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.MissingKey)
 		settings.MissingKey = "error"
 	}
 
@@ -133,6 +134,9 @@ func main() {
 			env[splits[0]] = splits[1]
 		}
 		vars[settings.Environment] = env
+		if settings.Verbose {
+			log.Printf("environment: %+v", settings.Environment)
+		}
 	}
 
 	// Load the settings.
@@ -151,6 +155,9 @@ func main() {
 			}
 		} else {
 			yaml.Unmarshal(in, &load)
+			if settings.Verbose && forced {
+				log.Printf("used config: %+v", settings.Config)
+			}
 		}
 		if settings.Debugging {
 			log.Printf("-settings:%#v", settings)
@@ -286,7 +293,7 @@ func main() {
 
 	if len(load) == 0 && len(vars) == 0 {
 		usage(os.Stderr)
-		fmt.Fprintf(os.Stderr, "%s: No variables provided.\n\n", "WARNING")
+		fmt.Fprintln(os.Stderr, "WARNING: No variables provided.")
 	}
 
 	// Copy the loaded keys in the vars unless provided on the command line.
