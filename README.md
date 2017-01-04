@@ -76,7 +76,10 @@ or name the map key:
 ## Functions
 
 ### `add`
-
 ### `inc`
-
 ### `now`
+### `lower`
+### `upper`
+### `trim`
+### `trimLeft`
+### `trimRight`

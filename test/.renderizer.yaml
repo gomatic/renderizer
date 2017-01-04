@@ -1,14 +1,8 @@
 Name: Renderizer
 Deployment: master
-App: &App Gomatic
-Repo: &Repo github
-Base: 100
+App: gomatic
+Repo: registry.gomatic.systems
+BasePort: 101
 Containers:
 - Name: one
-  Repo: *Repo
-  App: *App
-  Port: 312
 - Name: two
-  Repo: *Repo
-  App: *App
-  Port: 123
