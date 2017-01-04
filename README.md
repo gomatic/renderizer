@@ -46,18 +46,18 @@ Settings can be loaded from a yaml:
 
 This is a positional toggle flag.
 
-Variables names are converted to title case by default. It can be disabled for any subsequent variables:
+Variable names are converted to title case by default. It can be disabled for any subsequent variables:
  
     renderizer --name=value -C --top=first template-file
 
 Sets:
 
-    name: value
-    Top: first
+    Name: value
+    top: first
 
 ### Missing Keys `-M=`
 
-Control the missingkeys option:
+Control the missingkeys template-engine option:
 
     renderizer -M=zero --top=first template-file
 
