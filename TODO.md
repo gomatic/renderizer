@@ -2,3 +2,6 @@
   - [ ] settings
   - [ ] templates
 - [ ] templates on stdin
+- [ ] modes
+  - [ ] HTML
+  - [x] text
