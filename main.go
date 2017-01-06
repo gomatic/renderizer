@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+//
 func usage(out io.Writer) {
 	fmt.Fprintf(out, `usage: renderizer [options] [--name=value...] template...
 options:
@@ -47,6 +49,8 @@ type Settings struct {
 	Debugging bool
 	//
 	Verbose bool
+	//
+	CommandLine string
 }
 
 //
@@ -59,9 +63,16 @@ var settings = Settings{
 //
 func main() {
 
+	if len(os.Args) == 1 {
+		usage(os.Stdout)
+		return
+	}
+
 	vars := map[string]interface{}{}
 	load := map[string]interface{}{}
 	args := []string{}
+
+	settings.CommandLine = commandLine()
 
 	// Initialize some settings from the environment.
 
@@ -93,15 +104,13 @@ func main() {
 			usage(os.Stdout)
 			return
 		case 's', 'S':
-			nv := strings.Split(arg, "=")
+			nv := strings.SplitN(arg, "=", 2)
 			if len(nv) != 1 {
 				settings.Config = nv[1]
 			}
 		case 'e', 'E':
-			nv := strings.Split(arg, "=")
-			if len(nv) == 1 {
-				settings.Environment = "_env"
-			} else {
+			nv := strings.SplitN(arg, "=", 2)
+			if len(nv) != 1 {
 				settings.Environment = nv[1]
 			}
 		case 'v', 'V':
@@ -109,7 +118,7 @@ func main() {
 		case 'd', 'D':
 			settings.Debugging = true
 		case 'm', 'M':
-			nv := strings.Split(arg, "=")
+			nv := strings.SplitN(arg, "=", 2)
 			if len(nv) == 1 {
 				settings.MissingKey = "error"
 			} else {
@@ -123,20 +132,6 @@ func main() {
 	default:
 		fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.MissingKey)
 		settings.MissingKey = "error"
-	}
-
-	// Add the environment to the variables.
-
-	if settings.Environment != "" {
-		env := make(map[string]string)
-		for _, item := range os.Environ() {
-			splits := strings.Split(item, "=")
-			env[splits[0]] = splits[1]
-		}
-		vars[settings.Environment] = env
-		if settings.Verbose {
-			log.Printf("environment: %+v", settings.Environment)
-		}
 	}
 
 	// Load the settings.
@@ -183,7 +178,7 @@ func main() {
 			}
 
 			arg = strings.TrimLeft(arg, "-")
-			nv := strings.Split(arg, "=")
+			nv := strings.SplitN(arg, "=", 2)
 			n := nv[0]
 			i += 1
 
@@ -336,4 +331,30 @@ func main() {
 		}
 		fmt.Println(string(sqlBuffer.Bytes()))
 	}
+}
+
+// Reproduce a command line string that reflects a usable command line.
+func commandLine() string {
+
+	quoter := func(e string) string {
+		if !strings.Contains(e, " ") {
+			return e
+		}
+		p := strings.SplitN(e, "=", 2)
+		if strings.Contains(p[0], " ") {
+			p[0] = `"` + strings.Replace(p[0], `"`, `\"`, -1) + `"`
+		}
+		if len(p) == 1 {
+			return p[0]
+		}
+		return p[0] + `="` + strings.Replace(p[1], `"`, `\"`, -1) + `"`
+	}
+	each := func(s []string) (o []string) {
+		o = make([]string, len(s))
+		for i, t := range s {
+			o[i] = quoter(t)
+		}
+		return
+	}
+	return filepath.Base(os.Args[0]) + " " + strings.Join(each(os.Args[1:]), " ")
 }

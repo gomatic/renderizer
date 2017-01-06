@@ -10,7 +10,15 @@ Supports providing top-level name/value pairs on the command line:
 
     renderizer --name=value --top=first template-file
 
-**NOTE:** that _all_ parameter values are provided `name=value`.
+Sets:
+
+    Name: value
+    Top: first
+
+**NOTE:**
+
+- Template values are provided `--name=value`.
+- Renderizer controls are provided using `-NAME[=value]`.
 
 ## Example
 
@@ -20,21 +28,21 @@ First:
     cd renderizer
     go build
 
-Generate the master pod.yaml:
+Render the `pod.yaml` using values from `test/.renderizer.yaml`:
 
     renderizer -S=test/.renderizer.yaml test/pod.yaml
 
- or, set `RENDERIZER` in the environment:
+Or set `RENDERIZER` in the environment:
 
     RENDERIZER=test/.renderizer.yaml renderizer test/pod.yaml
 
-alternatively, it'll try `.renderizer.yaml` in the current directory.
+Alternatively, it'll try `.renderizer.yaml` in the current directory.
 
     (cd test; renderizer pod.yaml)
 
-Generate the dev pod.yaml (after `cd test/`):
+Next, override the `deployment` value to render the "dev" `pod.yaml` (after `cd test/`):
 
-    renderizer --deployment=dev pod.yaml
+    renderizer --deployment=dev --name='spaced out' pod.yaml
 
 ## Configuration
 
@@ -65,21 +73,22 @@ Control the missingkeys template-engine option:
 
 ### Environment `-E=`
 
-Add the environment to the variables map as `_env`:
+Provide a default value for missing environment variables:
 
-    renderizer -E template-file
+    renderizer -E=--missing-- template-file
 
-or name the map key:
+## Template Functions
 
-    renderizer -E=environ template-file
-
-## Functions
-
-### `add`
-### `inc`
-### `now`
-### `lower`
-### `upper`
-### `trim`
-### `trimLeft`
-### `trimRight`
+- `add` - `func(a, b int) int`
+- `cleanse` - `func(s string) string` - remove `[^[:alpha:]]`
+- `commandLine` - `func() string` the command line
+- `environment` - `map[string]string` - the runtime environment
+- `inc` - `func(a int) int`
+- `join` - `func(a []interface, sep string) string`
+- `lower` - `strings.ToLower`
+- `now` - `time.Now`
+- `replace` - `strings.Replace`
+- `trim` - `strings.Trim`
+- `trimLeft` - `strings.TrimLeft`
+- `trimRight` - `strings.TrimRight`
+- `upper` - `strings.ToUpper`

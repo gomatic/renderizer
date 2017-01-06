@@ -1,7 +1,10 @@
+# Generated: {{now.UTC.Format "2006-01-02T15:04:05MST"}}
+#      With: {{commandLine}}
+#      From: {{environment "USER"}}@{{environment "HOST"}}:{{environment "PWD"}}
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{lower .Name}}
+  name: {{replace .Name " " "_" -1 | cleanse | lower}}
   namespace: {{.App}}-{{.Deployment}}
   labels:
     app: {{.App}}
