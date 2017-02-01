@@ -23,8 +23,7 @@ options:
   -S=settings.yaml            Load the settings from the provided yaml.
                               Initializes from RENDERIZER environment.
                               If not set, tries .renderizer.yaml in the current directory.
-  -E[=name]                   Load the environment into the variables map as _env
-                              or name if provided
+  -E=name                     Load the environment into the variable name instead of as env.
   -M[=(default|zero|error)]   The missingkey template option. Default: error
                               Initializes from RENDERIZER_MISSINGKEY environment.
   -V                          Enable verbose output.
@@ -53,9 +52,10 @@ type Settings struct {
 
 //
 var settings = Settings{
-	Capitalize: true,
-	MissingKey: "error",
-	TimeFormat: "20060102T150405",
+	Capitalize:  true,
+	MissingKey:  "error",
+	TimeFormat:  "20060102T150405",
+	Environment: "env",
 }
 
 //
@@ -103,8 +103,6 @@ func main() {
 			nv := strings.SplitN(arg, "=", 2)
 			if len(nv) != 1 {
 				settings.Environment = nv[1]
-			} else {
-				settings.Environment = "env"
 			}
 		case 'v', 'V':
 			settings.Verbose = true
