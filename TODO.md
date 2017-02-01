@@ -2,11 +2,11 @@
   - [ ] settings
   - [ ] templates
 - input
-  - [ ] templates on stdin
+  - [x] templates on stdin
 - modes
   - [ ] HTML
   - [x] text
 - functions
   - [x] environment
-  - [x] commandLine
+  - [x] command_line
   - [ ] osquery

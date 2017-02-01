@@ -7,11 +7,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/gomatic/funcmap"
 	"gopkg.in/yaml.v2"
 )
 
@@ -49,8 +49,6 @@ type Settings struct {
 	Debugging bool
 	//
 	Verbose bool
-	//
-	CommandLine string
 }
 
 //
@@ -63,16 +61,9 @@ var settings = Settings{
 //
 func main() {
 
-	if len(os.Args) == 1 {
-		usage(os.Stdout)
-		return
-	}
-
 	vars := map[string]interface{}{}
 	load := map[string]interface{}{}
 	args := []string{}
-
-	settings.CommandLine = commandLine()
 
 	// Initialize some settings from the environment.
 
@@ -112,6 +103,8 @@ func main() {
 			nv := strings.SplitN(arg, "=", 2)
 			if len(nv) != 1 {
 				settings.Environment = nv[1]
+			} else {
+				settings.Environment = "env"
 			}
 		case 'v', 'V':
 			settings.Verbose = true
@@ -281,14 +274,16 @@ func main() {
 		}
 	}
 
+	files := args
 	if len(args) == 0 {
-		usage(os.Stdout)
-		os.Exit(1)
-	}
-
-	if len(load) == 0 && len(vars) == 0 {
-		usage(os.Stderr)
-		fmt.Fprintln(os.Stderr, "WARNING: No variables provided.")
+		if len(args) < 2 {
+			stat, _ := os.Stdin.Stat()
+			isTTY := (stat.Mode() & os.ModeCharDevice) != 0
+			if isTTY {
+				log.Println("source: stdin")
+			}
+			files = []string{""}
+		}
 	}
 
 	// Copy the loaded keys in the vars unless provided on the command line.
@@ -297,6 +292,15 @@ func main() {
 		if _, exists := vars[n]; !exists {
 			vars[n] = v
 		}
+	}
+
+	if settings.Environment != "" {
+		v := make(map[string]string)
+		for _, item := range os.Environ() {
+			splits := strings.Split(item, "=")
+			v[splits[0]] = strings.Join(splits[1:], "=")
+		}
+		vars[settings.Environment] = v
 	}
 
 	// Dump the settings
@@ -309,52 +313,44 @@ func main() {
 
 	// Execute each template
 
-	for _, arg := range args {
-		file, err := ioutil.ReadFile(arg)
-		if err != nil {
-			log.Println(err)
-			continue
+	for _, arg := range files {
+		var file []byte
+		if arg == "" {
+			f, err := ioutil.ReadAll(os.Stdin)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			file = f
+		} else {
+			f, err := ioutil.ReadFile(arg)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			file = f
 		}
 
 		tmpl, err := template.New(arg).
 			Option(fmt.Sprintf("missingkey=%s", settings.MissingKey)).
-			Funcs(funcs).
+			Funcs(funcmap.Map).
 			Parse(string(file))
 
 		if err != nil {
 			log.Print(err)
 		}
 		var sqlBuffer bytes.Buffer
-		err = tmpl.Execute(&sqlBuffer, vars)
-		if err != nil {
-			log.Print(err)
-		}
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("PANIC: %+v", r)
+				}
+			}()
+			err = tmpl.Execute(&sqlBuffer, vars)
+			if err != nil {
+				log.Print(err)
+			}
+		}()
 		fmt.Println(string(sqlBuffer.Bytes()))
 	}
-}
-
-// Reproduce a command line string that reflects a usable command line.
-func commandLine() string {
-
-	quoter := func(e string) string {
-		if !strings.Contains(e, " ") {
-			return e
-		}
-		p := strings.SplitN(e, "=", 2)
-		if strings.Contains(p[0], " ") {
-			p[0] = `"` + strings.Replace(p[0], `"`, `\"`, -1) + `"`
-		}
-		if len(p) == 1 {
-			return p[0]
-		}
-		return p[0] + `="` + strings.Replace(p[1], `"`, `\"`, -1) + `"`
-	}
-	each := func(s []string) (o []string) {
-		o = make([]string, len(s))
-		for i, t := range s {
-			o[i] = quoter(t)
-		}
-		return
-	}
-	return filepath.Base(os.Args[0]) + " " + strings.Join(each(os.Args[1:]), " ")
 }
