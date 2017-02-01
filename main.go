@@ -200,6 +200,13 @@ func main() {
 					default:
 						vars[n] = []interface{}{x, y}
 					}
+				case int:
+					switch y := v.(type) {
+					case int:
+						vars[n] = []int64{int64(x), int64(y)}
+					default:
+						vars[n] = []interface{}{x, y}
+					}
 				case int64:
 					switch y := v.(type) {
 					case int64:
@@ -290,7 +297,18 @@ func main() {
 
 	for n, v := range load {
 		if _, exists := vars[n]; !exists {
-			vars[n] = v
+			switch x := v.(type) {
+			case int8:
+				vars[n] = int64(x)
+			case int16:
+				vars[n] = int64(x)
+			case int32:
+				vars[n] = int64(x)
+			case int:
+				vars[n] = int64(x)
+			default:
+				vars[n] = v
+			}
 		}
 	}
 

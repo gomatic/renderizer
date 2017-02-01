@@ -14,5 +14,5 @@ spec:
       image: {{$p.Repo}}/{{$p.App}}-{{.Name}}
       ports:
         - name: *&name_{{index $i}}
-          containerPort: {{add $p.BasePort $i}}
+          containerPort: {{inc $p.BasePort $i}}
           protocol: TCP{{end}}
