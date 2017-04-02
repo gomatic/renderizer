@@ -17,7 +17,7 @@ import (
 
 //
 func usage(out io.Writer) {
-	fmt.Fprintf(out, `usage: renderizer [options] [--name=value...] template...
+	fmt.Fprintln(out, `usage: renderizer [options] [--name=value...] template...
 options:
 
   -S=settings.yaml            Load the settings from the provided yaml.
@@ -28,7 +28,6 @@ options:
                               Initializes from RENDERIZER_MISSINGKEY environment.
   -V                          Enable verbose output.
   -D                          Enable debug output.
-
 `)
 }
 
