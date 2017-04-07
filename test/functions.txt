@@ -1,61 +1,60 @@
-line {{next}} started = {{started}}
-line {{next}} debugging = {{debug_toggle}}
-line {{next}} {{if debugging}}debugging{{end}}
-line {{next}} debugging = {{debug_toggle}}
-line {{next}} {{if debugging}}debugging{{end}}
-line {{next}} {{debug "message"}}
-line {{next}} {{command_line}}
-line {{next}} {{ip_math "[-1].[+2].[-3].[+1,%10]" "193.166.3.39"}}
-line {{next}} {{ip4_inc 2 -3 "192.168.3.0"}}
-line {{next}} {{ip4_next 2 0 4 "192.168.3.0"}}
-line {{next}} {{ip4_prev 2 1 4 "192.168.1.0"}}
-line {{next}} {{ip_ints "192.168.1.0" | ip4_add 2 0 4 3}}
-line {{next}} {{ip_ints "192.168.1.0" | ip4_add 2 0 4 3 | ip4_join}}
-line {{next}} TODO {{ip6_inc 2 1 "1111:2222:3333:4444:5555:6666:7777:8888"}}
-line {{next}} TODO {{ip6_next 2 0 4 "1111:2222:3333:4444:5555:6666:7777:8888"}}
-line {{next}} TODO {{ip6_prev 2 0 4 "1111:2222:3333:4444:5555:6666:7777:8888"}}
-line {{next}} TODO {{ip_ints "1111:2222:3333:4444:5555:6666:7777:8888" | ip6_add 2 0 4 3}}
-line {{next}} TODO {{ip_ints "1111:2222:3333:4444:5555:6666:7777:8888" | ip6_join }}
-line {{next}} TODO { {cidr_next} }
-line {{next}} {{ip_ints "192.168.0.0"}}
-line {{next}} {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888"}}
-line {{next}} {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | to_int 16 }}
-line {{next}} {{ip_split "192.168.0.0" | dec_to_int}}
-line {{next}} {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | hex_to_int}}
-line {{next}} {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | hex_to_int | from_int "%04x" | join "."}}
-line {{next}} {{ip_split "192.168.0.0" | dec_to_int | from_int "%d" | join "."}}
-line {{next}} A {{keynext "A"}}
-line {{next}} B {{keynext "B"}}
-line {{next}} A {{keynext "A"}}
-line {{next}} 1 + 5 + 4  = {{4 | inc 1 5}}
-line {{next}} 7 + 3      = {{add 3 7}}
-line {{next}} 13 - 3     = {{sub 3 13}}
-line {{next}} 5 * 2      = {{mul 2 5}}
-line {{next}} 20 / 2     = {{div 2 20}}
-line {{next}} 12345 % 10 = {{mod 10 12345}}
-line {{next}} rand       = {{rand}}
-line {{next}} cleanse {{cleanse "zaq!xsw@cde#vfr$bgt%nhy^mju&,ki*.lo(/;p)"}}
-line {{next}} PWD = {{environment "PWD"}}
-line {{next}} now = {{now}}
-line {{next}} debugging = {{debug_toggle}}
-line {{next}} {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | iindex 1}}
-line {{next}} {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | hex_to_int | iindex 1}}
-line {{next}} {{"1111:2222:3333:4444:5555:6666:7777:8888" | iindex 4}}
-line {{next}} {{split "0" "1111:2222:3333:4444:5555:6666:7777:8888"}}
-line {{next}} {{substr 4 10 "1111:2222:3333:4444:5555:6666:7777:8888"}}
-line {{next}} {{lower "LOWER"}}
-line {{next}} {{replace "1111:2222:3333:4444:5555:6666:7777:8888" ":" " " 3}}
-line {{next}} {{"1111:2222:3333:4444:5555:6666:7777:8888" | replace_ 3 ":" " "}}
-line {{next}} {{title "title"}}
-line {{next}} {{title "TITLE"}}
-line {{next}} {{trim "abctrimmedxyz" "abcxyz"}}
-line {{next}} {{"abctrimmedxyz" | trim_ "abcxyz"}}
-line {{next}} {{trim_left "abctrimmedxyz" "abcxyz"}}
-line {{next}} {{"abctrimmedxyz" | trim_left_ "abcxyz"}}
-line {{next}} {{trim_right "abctrimmedxyz" "abcxyz"}}
-line {{next}} {{"abctrimmedxyz" | trim_right_ "abcxyz"}}
-line {{next}} {{upper "upper"}}
-line {{next}} pausing 1s
-line {{next}}  paused = {{pause 1000}}
-line {{next}} started = {{started}}
-line {{next}}   ended = {{now}}
+line {{next}} started            = {{started}}
+line {{next}} debugging          = {{debug_toggle}}
+line {{next}} debugging          = {{if debugging}}debugging{{end}}
+line {{next}} debug_toggle       = {{debug_toggle}}
+line {{next}} debugging          = {{if debugging}}debugging{{end}}
+line {{next}} debug              = {{debug "message"}}
+line {{next}} command_line       = {{command_line}}
+line {{next}} PWD               = {{environment "PWD"}}
+line {{next}} ip_math            = {{ip_math "[-1].[+2].[-3].[+1,%10]" "193.166.3.39"}}
+line {{next}} ip4_inc            = {{ip4_inc 2 -3 "192.168.3.0"}}
+line {{next}} ip4_next          = {{ip4_next 2 0 4 "192.168.3.0"}}
+line {{next}} ip4_prev          = {{ip4_prev 2 1 4 "192.168.1.0"}}
+line {{next}} ip_ints           = {{ip_ints "192.168.1.0" | ip4_add 2 0 4 3}}
+line {{next}} ip_ints           = {{ip_ints "192.168.1.0" | ip4_add 2 0 4 3 | ip4_join}}
+line {{next}} TODO                {{ip6_inc 2 1 "1111:2222:3333:4444:5555:6666:7777:8888"}}
+line {{next}} TODO                {{ip6_next 2 0 4 "1111:2222:3333:4444:5555:6666:7777:8888"}}
+line {{next}} TODO                {{ip6_prev 2 0 4 "1111:2222:3333:4444:5555:6666:7777:8888"}}
+line {{next}} TODO                {{ip_ints "1111:2222:3333:4444:5555:6666:7777:8888" | ip6_add 2 0 4 3}}
+line {{next}} TODO                {{ip_ints "1111:2222:3333:4444:5555:6666:7777:8888" | ip6_join }}
+line {{next}} TODO                { {cidr_next} }
+line {{next}} ip_ints           = {{ip_ints "192.168.0.0"}}
+line {{next}} ip_split          = {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888"}}
+line {{next}} ip_split          = {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | to_int 16 }}
+line {{next}} ip_split          = {{ip_split "192.168.0.0" | dec_to_int}}
+line {{next}} ip_split          = {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | hex_to_int}}
+line {{next}} ip_split          = {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | hex_to_int | from_int "%04x" | join "."}}
+line {{next}} ip_split          = {{ip_split "192.168.0.0" | dec_to_int | from_int "%d" | join "."}}
+line {{next}} ip_split          = {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | iindex 1}}
+line {{next}} ip_split          = {{ip_split "1111:2222:3333:4444:5555:6666:7777:8888" | hex_to_int | iindex 1}}
+line {{next}} iindex            = {{"1111:2222:3333:4444:5555:6666:7777:8888" | iindex 4}}
+line {{next}} split             = {{split "0" "1111:2222:3333:4444:5555:6666:7777:8888"}}
+line {{next}} substr            = {{substr 4 10 "1111:2222:3333:4444:5555:6666:7777:8888"}}
+line {{next}} replace           = {{replace "1111:2222:3333:4444:5555:6666:7777:8888" ":" " " 3}}
+line {{next}} replace_          = {{"1111:2222:3333:4444:5555:6666:7777:8888" | replace_ 3 ":" " "}}
+line {{next}} trim              = {{trim "abctrimmedxyz" "abcxyz"}}
+line {{next}} trim_             = {{"abctrimmedxyz" | trim_ "abcxyz"}}
+line {{next}} trim_left         = {{trim_left "abctrimmedxyz" "abcxyz"}}
+line {{next}} trim_left_        = {{"abctrimmedxyz" | trim_left_ "abcxyz"}}
+line {{next}} trim_right        = {{trim_right "abctrimmedxyz" "abcxyz"}}
+line {{next}} trim_right_       = {{"abctrimmedxyz" | trim_right_ "abcxyz"}}
+line {{next}} keynext A         = {{keynext "A"}}
+line {{next}} keynext B         = {{keynext "B"}}
+line {{next}} keynext A         = {{keynext "A"}}
+line {{next}} inc               = 1 + 5 + 4  = {{4 | inc 1 5}}
+line {{next}} add               = 7 + 3      = {{add 3 7}}
+line {{next}} sub               = 13 - 3     = {{sub 3 13}}
+line {{next}} mul               = 5 * 2      = {{mul 2 5}}
+line {{next}} div               = 20 / 2     = {{div 2 20}}
+line {{next}} mod               = 12345 % 10 = {{mod 10 12345}}
+line {{next}} rand              = {{rand}}
+line {{next}} lower             = {{lower "LOWER"}}
+line {{next}} upper             = {{upper "upper"}}
+line {{next}} title             = {{title "this is a title"}}
+line {{next}} title             = {{title "THIS IS A TITLE"}}
+line {{next}} initcap           = {{initcap "this is a title"}}
+line {{next}} cleanse           = {{cleanse "zaq!xsw@cde#vfr$bgt%nhy^mju&,ki*.lo(/;p)"}}
+line {{next}} now               = {{now}}
+line {{next}} pausing 1s        = {{pause 1000}}
+line {{next}} now               = {{now}}
+line {{next}} started           = {{started}}
