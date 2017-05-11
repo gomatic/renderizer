@@ -38,7 +38,7 @@ type Settings struct {
 	// Set the Missing Key template option. Defaults to "error".
 	MissingKey string
 	// Configuration yaml
-	Config string
+	Config []string
 	// Add the environment map to the variables.
 	Environment string
 	//
@@ -63,6 +63,7 @@ func main() {
 	vars := map[string]interface{}{}
 	load := map[string]interface{}{}
 	args := []string{}
+	settings.Config = []string{}
 
 	// Initialize some settings from the environment.
 
@@ -70,7 +71,7 @@ func main() {
 		settings.MissingKey = m
 	}
 	if m, exists := os.LookupEnv("RENDERIZER"); exists {
-		settings.Config = m
+		settings.Config = append(settings.Config, m)
 	}
 
 	// Process settings flags.
@@ -96,7 +97,7 @@ func main() {
 		case 's', 'S':
 			nv := strings.SplitN(arg, "=", 2)
 			if len(nv) != 1 {
-				settings.Config = nv[1]
+				settings.Config = append(settings.Config, nv[1])
 			}
 		case 'e', 'E':
 			nv := strings.SplitN(arg, "=", 2)
@@ -127,13 +128,13 @@ func main() {
 	// Load the settings.
 
 	forced := false
-	if settings.Config == "" {
+	if len(settings.Config) == 0 {
 		forced = true
-		settings.Config = ".renderizer.yaml"
+		settings.Config = []string{".renderizer.yaml"}
 	}
 
-	if settings.Config != "" {
-		in, err := ioutil.ReadFile(settings.Config)
+	for _, config := range settings.Config {
+		in, err := ioutil.ReadFile(config)
 		if err != nil {
 			if !forced {
 				log.Println(err)
