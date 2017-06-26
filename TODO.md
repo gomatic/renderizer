@@ -1,3 +1,4 @@
+- [ ] in-place updates
 - URL support
   - [ ] settings
   - [ ] templates
