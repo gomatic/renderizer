@@ -5,13 +5,13 @@ PROJECT_URL := "https://github.com/gomatic/$(APP_NAME)"
 SOURCES = $(wildcard *.go)
 
 .PHONY : $(SOURCES)
-.PHONY : all
+.PHONY : all release build vet test
 .PHONY : help
 .DEFAULT_GOAL := help
 
 PREFIX ?= usr/local
 
-all: release tests ## Make everything
+all: release vet test ## Make everything
 
 build: # BUild darwin
 	goreleaser --config .goreleaser-darwin.yml --debug --rm-dist --skip-publish --skip-validate
