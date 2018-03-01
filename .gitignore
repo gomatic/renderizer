@@ -7,3 +7,6 @@
 !*.yml
 !*.md
 !*/
+
+build/
+release/

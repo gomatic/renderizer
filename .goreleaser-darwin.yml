@@ -1,0 +1,13 @@
+project_name: renderizer
+builds:
+  -
+    binary: renderizer
+    goos:
+      - darwin
+    goarch:
+      - amd64
+
+dist: build/dist
+
+release:
+  draft: true

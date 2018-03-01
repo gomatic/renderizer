@@ -17,7 +17,7 @@ import (
 
 //
 func usage(out io.Writer) {
-	fmt.Fprintln(out, `usage: renderizer [options] [--name=value...] template...
+	fmt.Fprint(out, `usage: renderizer [options] [--name=value...] template...
 options:
 
   -S=settings.yaml            Load the settings from the provided yaml.
@@ -126,7 +126,7 @@ func main() {
 	}
 
 	// Load the settings.
-
+	status := 0
 	forced := false
 	if len(settings.Config) == 0 {
 		forced = true
@@ -137,6 +137,7 @@ func main() {
 		in, err := ioutil.ReadFile(config)
 		if err != nil {
 			if !forced {
+				status = 5
 				log.Println(err)
 			}
 		} else {
@@ -335,6 +336,7 @@ func main() {
 			f, err := ioutil.ReadAll(os.Stdin)
 			if err != nil {
 				log.Println(err)
+				status = 1
 				continue
 			}
 			file = f
@@ -342,6 +344,7 @@ func main() {
 			f, err := ioutil.ReadFile(arg)
 			if err != nil {
 				log.Println(err)
+				status = 2
 				continue
 			}
 			file = f
@@ -353,6 +356,7 @@ func main() {
 			Parse(string(file))
 
 		if err != nil {
+			status = 3
 			log.Print(err)
 		}
 		var sqlBuffer bytes.Buffer
@@ -364,9 +368,12 @@ func main() {
 			}()
 			err = tmpl.Execute(&sqlBuffer, vars)
 			if err != nil {
+				status = 4
 				log.Print(err)
 			}
 		}()
 		fmt.Println(string(sqlBuffer.Bytes()))
 	}
+
+	os.Exit(status)
 }
