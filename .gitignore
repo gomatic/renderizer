@@ -7,6 +7,8 @@
 !*.yml
 !*.md
 !*/
+!test/*.tpl
+!test/*.sh
 
 build/
 release/
