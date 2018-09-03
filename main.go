@@ -28,6 +28,7 @@ options:
                               Initializes from RENDERIZER_MISSINGKEY environment.
   -V                          Enable verbose output.
   -D                          Enable debug output.
+  --version                   Output version.
 `)
 }
 
@@ -57,6 +58,10 @@ var settings = Settings{
 	Environment: "env",
 }
 
+// Usually overridden by goreleaser
+var version = "0.0.0-qev"
+var commit = "0000000000"
+
 //
 func main() {
 
@@ -85,6 +90,10 @@ func main() {
 		if arg[0] != '-' || (la > 2 && arg[:2] == "--") {
 			if strings.ToLower(arg) == "--help" {
 				usage(os.Stdout)
+				return
+			}
+			if strings.ToLower(arg) == "--version" {
+		                fmt.Fprintf(os.Stdout, "%s %s\n", version, commit[:8])
 				return
 			}
 			params = append(params, arg)
