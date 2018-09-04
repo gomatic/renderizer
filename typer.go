@@ -6,7 +6,7 @@ import (
 )
 
 // Convert to []interface{}
-func toi(x interface{}) (i []interface{}) {
+func toInterfaceSlice(x interface{}) (i []interface{}) {
 	switch y := x.(type) {
 	case []string:
 		i = make([]interface{}, len(y))

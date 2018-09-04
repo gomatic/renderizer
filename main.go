@@ -1,36 +1,30 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
 
-	"github.com/gomatic/funcmap"
+	"github.com/kardianos/osext"
+	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 )
 
-//
-func usage(out io.Writer) {
-	fmt.Fprint(out, `usage: renderizer [options] [--name=value...] template...
-options:
-
-  -S=settings.yaml            Load the settings from the provided yaml.
-                              Initializes from RENDERIZER environment.
-                              If not set, tries .renderizer.yaml in the current directory.
-  -E=name                     Load the environment into the variable name instead of as env.
-  -M[=(default|zero|error)]   The missingkey template option. Default: error
-                              Initializes from RENDERIZER_MISSINGKEY environment.
-  -V                          Enable verbose output.
-  -D                          Enable debug output.
-  --version                   Output version.
-`)
-}
+var (
+	version  = "2.0.0"
+	commit   = "unknown"
+	date     = "none"
+	selfn, _ = osext.Executable()
+	selfd, _ = osext.ExecutableFolder()
+	selfz    = filepath.Base(selfn)
+	semver   = version + "-" + commit[:7] + "." + date
+	appver   = selfz + "/" + semver
+	started  = time.Now().Format("20060102T150405Z0700")
+)
 
 //
 type Settings struct {
@@ -39,7 +33,11 @@ type Settings struct {
 	// Set the Missing Key template option. Defaults to "error".
 	MissingKey string
 	// Configuration yaml
-	Config []string
+	ConfigFiles []string
+	Defaulted   bool
+	Config      map[string]interface{}
+	//
+	Arguments []string
 	// Add the environment map to the variables.
 	Environment string
 	//
@@ -56,333 +54,117 @@ var settings = Settings{
 	MissingKey:  "error",
 	TimeFormat:  "20060102T150405",
 	Environment: "env",
+	Config:      map[string]interface{}{},
+	Arguments:   []string{},
 }
-
-// Usually overridden by goreleaser
-var version = "0.0.0-qev"
-var commit = "0000000000"
 
 //
 func main() {
+	app := cli.NewApp()
+	app.Name = "renderizer"
+	app.Usage = "renderizer [options] [--name=value...] template..."
+	app.UsageText = "Template renderer"
+	app.Version = appver
+	app.EnableBashCompletion = true
+	configs := cli.StringSlice([]string{".renderizer.yaml"})
 
-	vars := map[string]interface{}{}
-	load := map[string]interface{}{}
-	args := []string{}
-	settings.Config = []string{}
+	// Remove args that are not processed by urfave/cli
+	var args []string
+	for _, arg := range os.Args {
+		larg := strings.ToLower(arg)
+		switch {
+		case larg == "-c":
+			fallthrough
+		case strings.HasPrefix(arg, "--") && strings.Contains(arg, "="):
+			settings.Arguments = append(settings.Arguments, arg)
 
-	// Initialize some settings from the environment.
-
-	if m, exists := os.LookupEnv("RENDERIZER_MISSINGKEY"); exists {
-		settings.MissingKey = m
-	}
-	if m, exists := os.LookupEnv("RENDERIZER"); exists {
-		settings.Config = append(settings.Config, m)
-	}
-
-	// Process settings flags.
-
-	params := []string{}
-	for _, arg := range os.Args[1:] {
-		la := len(arg)
-		if la == 0 {
-			continue
-		}
-		if arg[0] != '-' || (la > 2 && arg[:2] == "--") {
-			if strings.ToLower(arg) == "--help" {
-				usage(os.Stdout)
-				return
-			}
-			if strings.ToLower(arg) == "--version" {
-		                fmt.Fprintf(os.Stdout, "%s %s\n", version, commit[:8])
-				return
-			}
-			params = append(params, arg)
-			continue
-		}
-		switch arg[1:][0] {
-		case 'h', 'H':
-			usage(os.Stdout)
-			return
-		case 's', 'S':
-			nv := strings.SplitN(arg, "=", 2)
-			if len(nv) != 1 {
-				settings.Config = append(settings.Config, nv[1])
-			}
-		case 'e', 'E':
-			nv := strings.SplitN(arg, "=", 2)
-			if len(nv) != 1 {
-				settings.Environment = nv[1]
-			}
-		case 'v', 'V':
-			settings.Verbose = true
-		case 'd', 'D':
-			settings.Debugging = true
-		case 'm', 'M':
-			nv := strings.SplitN(arg, "=", 2)
-			if len(nv) == 1 {
-				settings.MissingKey = "error"
-			} else {
-				settings.MissingKey = nv[1]
-			}
-		}
-	}
-
-	switch settings.MissingKey {
-	case "zero", "error", "default", "invalid":
-	default:
-		fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.MissingKey)
-		settings.MissingKey = "error"
-	}
-
-	// Load the settings.
-	status := 0
-	forced := false
-	if len(settings.Config) == 0 {
-		forced = true
-		settings.Config = []string{".renderizer.yaml"}
-	}
-
-	for _, config := range settings.Config {
-		in, err := ioutil.ReadFile(config)
-		if err != nil {
-			if !forced {
-				status = 5
-				log.Println(err)
-			}
-		} else {
-			yaml.Unmarshal(in, &load)
-			if settings.Verbose && forced {
-				log.Printf("used config: %+v", settings.Config)
-			}
-		}
-		if settings.Debugging {
-			log.Printf("-settings:%#v", settings)
-			log.Printf("loaded: %#v", load)
-		} else if settings.Verbose {
-			log.Printf("-settings:%+v", settings)
-			log.Printf("loaded: %+v", load)
-		}
-	}
-
-	// Iterate the remaining arguments for variable overrides and file names.
-
-	i := 0
-	for a, arg := range params {
-		if len(arg) > 1 && arg[0] == '-' {
-			switch arg[1:][0] {
-			case 'c', 'C':
-				settings.Capitalize = !settings.Capitalize
-				if settings.Verbose {
-					log.Printf("-capitalize:%v", settings.Capitalize)
-				}
-				continue
-			}
-
-			arg = strings.TrimLeft(arg, "-")
-			nv := strings.SplitN(arg, "=", 2)
-			n := nv[0]
-			i += 1
-
-			if settings.Capitalize {
-				n = fmt.Sprintf("%s%s", strings.ToTitle(n[:1]), strings.ToLower(n[1:]))
-			}
-
-			var v interface{}
-			if len(nv) == 1 {
-				v = true
-			} else {
-				v = typer(nv[1])
-			}
-
-			if settings.Debugging {
-				log.Printf("arg:%d var:%d name:%s value:%+v", a, i, n, v)
-			}
-
-			// This is probably a overkill but I thought it a good idea to keep the types strong as much as possible.
-			if vs, exists := vars[n]; exists {
-				switch x := vs.(type) {
-				case string:
-					switch y := v.(type) {
-					case string:
-						vars[n] = []string{x, y}
-					default:
-						vars[n] = []interface{}{x, y}
-					}
-				case int:
-					switch y := v.(type) {
-					case int:
-						vars[n] = []int64{int64(x), int64(y)}
-					default:
-						vars[n] = []interface{}{x, y}
-					}
-				case int64:
-					switch y := v.(type) {
-					case int64:
-						vars[n] = []int64{x, y}
-					default:
-						vars[n] = []interface{}{x, y}
-					}
-				case float64:
-					switch y := v.(type) {
-					case float64:
-						vars[n] = []float64{x, y}
-					default:
-						vars[n] = []interface{}{x, y}
-					}
-				case bool:
-					switch y := v.(type) {
-					case bool:
-						vars[n] = []bool{x, y}
-					default:
-						vars[n] = []interface{}{x, y}
-					}
-				case *time.Time:
-					switch y := v.(type) {
-					case *time.Time:
-						vars[n] = []*time.Time{x, y}
-					default:
-						vars[n] = []interface{}{x, y}
-					}
-				case []string:
-					switch y := v.(type) {
-					case string:
-						vars[n] = append(x, y)
-					default:
-						vars[n] = append(toi(x), y)
-					}
-				case []int64:
-					switch y := v.(type) {
-					case int64:
-						vars[n] = append(x, y)
-					default:
-						vars[n] = append(toi(x), y)
-					}
-				case []float64:
-					switch y := v.(type) {
-					case float64:
-						vars[n] = append(x, y)
-					default:
-						vars[n] = append(toi(x), y)
-					}
-				case []bool:
-					switch y := v.(type) {
-					case bool:
-						vars[n] = append(x, y)
-					default:
-						vars[n] = append(toi(x), y)
-					}
-				case []*time.Time:
-					switch y := v.(type) {
-					case *time.Time:
-						vars[n] = append(x, y)
-					default:
-						vars[n] = append(toi(x), y)
-					}
-				case []interface{}:
-					vars[n] = append(x, v)
-				}
-			} else {
-				vars[n] = v
-			}
-		} else {
+		case strings.HasPrefix(arg, "--"):
+			fallthrough
+		default:
 			args = append(args, arg)
 		}
 	}
 
-	files := args
-	if len(args) == 0 {
-		if len(args) < 2 {
-			stat, _ := os.Stdin.Stat()
-			isTTY := (stat.Mode() & os.ModeCharDevice) != 0
-			if isTTY {
-				log.Println("source: stdin")
-			}
-			files = []string{""}
+	app.Commands = []cli.Command{
+		{
+			Name:  "version",
+			Usage: "Shows the app version",
+			Action: func(ctx *cli.Context) error {
+				fmt.Println(ctx.App.Version)
+				return nil
+			},
+		},
+	}
+
+	app.Flags = []cli.Flag{
+		cli.StringSliceFlag{
+			Name:   "settings, S",
+			Usage:  "load the settings from the provided YAMLs",
+			Value:  &configs,
+			EnvVar: "RENDERIZER",
+		},
+		cli.StringFlag{
+			Name:  "environment, env, E",
+			Usage: "load the environment into the variable name instead of as 'env'",
+		},
+		cli.StringFlag{
+			Name:        "missing, M",
+			Usage:       "the 'missingkey' template option (default|zero|error)",
+			Value:       "error",
+			EnvVar:      "RENDERIZER_MISSINGKEY",
+			Destination: &settings.MissingKey,
+		},
+		cli.BoolFlag{
+			Name:        "debugging, debug, D",
+			Usage:       "enable debugging server",
+			Destination: &settings.Debugging,
+		},
+		cli.BoolFlag{
+			Name:        "verbose, V",
+			Usage:       "enable verbose output",
+			Destination: &settings.Verbose,
+		},
+	}
+
+	app.Before = func(ctx *cli.Context) error {
+		settings.Arguments = append(settings.Arguments, ctx.Args()...)
+
+		switch settings.MissingKey {
+		case "zero", "error", "default", "invalid":
+		default:
+			fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.MissingKey)
+			settings.MissingKey = "error"
 		}
-	}
 
-	// Copy the loaded keys in the vars unless provided on the command line.
-
-	for n, v := range load {
-		if _, exists := vars[n]; !exists {
-			switch x := v.(type) {
-			case int8:
-				vars[n] = int64(x)
-			case int16:
-				vars[n] = int64(x)
-			case int32:
-				vars[n] = int64(x)
-			case int:
-				vars[n] = int64(x)
-			default:
-				vars[n] = v
-			}
+		if len(settings.ConfigFiles) == 0 {
+			settings.Defaulted = true
+			settings.ConfigFiles = []string{".renderizer.yaml"}
 		}
-	}
 
-	if settings.Environment != "" {
-		v := make(map[string]string)
-		for _, item := range os.Environ() {
-			splits := strings.Split(item, "=")
-			v[splits[0]] = strings.Join(splits[1:], "=")
-		}
-		vars[settings.Environment] = v
-	}
-
-	// Dump the settings
-
-	if settings.Debugging {
-		log.Printf("vars: %#v", vars)
-	} else if settings.Verbose {
-		log.Printf("vars: %+v", vars)
-	}
-
-	// Execute each template
-
-	for _, arg := range files {
-		var file []byte
-		if arg == "" {
-			f, err := ioutil.ReadAll(os.Stdin)
+		for _, config := range settings.ConfigFiles {
+			in, err := ioutil.ReadFile(config)
 			if err != nil {
-				log.Println(err)
-				status = 1
-				continue
-			}
-			file = f
-		} else {
-			f, err := ioutil.ReadFile(arg)
-			if err != nil {
-				log.Println(err)
-				status = 2
-				continue
-			}
-			file = f
-		}
-
-		tmpl, err := template.New(arg).
-			Option(fmt.Sprintf("missingkey=%s", settings.MissingKey)).
-			Funcs(funcmap.Map).
-			Parse(string(file))
-
-		if err != nil {
-			status = 3
-			log.Print(err)
-		}
-		var sqlBuffer bytes.Buffer
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					log.Printf("PANIC: %+v", r)
+				if !settings.Defaulted {
+					return err
 				}
-			}()
-			err = tmpl.Execute(&sqlBuffer, vars)
-			if err != nil {
-				status = 4
-				log.Print(err)
+			} else {
+				yaml.Unmarshal(in, &settings.Config)
+				if settings.Verbose && settings.Defaulted {
+					log.Printf("used config: %+v", settings.ConfigFiles)
+				}
 			}
-		}()
-		fmt.Println(string(sqlBuffer.Bytes()))
+			if settings.Debugging {
+				log.Printf("-settings:%#v", settings)
+				log.Printf("loaded: %#v", settings.Config)
+			} else if settings.Verbose {
+				log.Printf("-settings:%+v", settings)
+				log.Printf("loaded: %+v", settings.Config)
+			}
+		}
+
+		return nil
 	}
 
-	os.Exit(status)
+	app.Action = renderizer
+	app.Run(args)
 }

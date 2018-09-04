@@ -8,6 +8,7 @@ builds:
       - linux
     goarch:
       - amd64
+    ldflags: '-s -w -X main.version={{.Version}} -X main.tag={{.Tag}} -X main.commit={{.Commit}} -X main.date={{ time "20060102T150405" }}'
 
 dist: release/dist
 
