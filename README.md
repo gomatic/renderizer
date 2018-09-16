@@ -75,6 +75,8 @@ It defaults to `env` which is effectively the same as the above `--environment=e
 
 ## Template Functions
 
+For the full list, see [functions.txt.tmpl](examples/functions/functions.txt.tmpl)
+
 - `add` - `func(a, b int) int`
 - `cleanse` - `func(s string) string` - remove `[^[:alpha:]]`
 - `commandLine` - `func() string` the command line
