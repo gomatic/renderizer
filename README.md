@@ -20,19 +20,19 @@ And read from the environment:
 
 ## Examples
 
-Render the `pod.yaml` using values from `test/.renderizer.yaml`:
+Render the `pod.yaml` using values from `examples/pod/.renderizer.yaml`:
 
-    renderizer --settings=example/pod/.pod.yaml example/pod/pod.yaml.tmpl
+    renderizer --settings=examples/pod/.pod.yaml examples/pod/pod.yaml.tmpl
 
 Or set `RENDERIZER` in the environment:
 
-    RENDERIZER=example/.pod.yaml renderizer example/pod/pod.yaml.tmpl
+    RENDERIZER=examples/.pod.yaml renderizer examples/pod/pod.yaml.tmpl
 
 Alternatively, it'll try `.renderizer.yaml` in the current directory.
 
-    (cd example/pod; renderizer pod.yaml)
+    (cd examples/pod; renderizer pod.yaml)
 
-Next, override the `deployment` value to render the "dev" `pod.yaml` (after `cd example/pod`):
+Next, override the `deployment` value to render the "dev" `pod.yaml` (after `cd examples/pod`):
 
     renderizer --deployment=dev --name='spaced out' pod.yaml
 
