@@ -1,0 +1,3 @@
+Hello: {{ .Name }}!
+{{ range $i, $c := .Items }}- {{ $i }}: {{ $c }}
+{{ end }}
