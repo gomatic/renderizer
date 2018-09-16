@@ -5,6 +5,7 @@
 !*.go
 !*.yaml
 !*.yml
+!*.tmpl
 !*.md
 !*/
 !test/*.tpl
