@@ -13,7 +13,7 @@ PREFIX ?= usr/local
 
 all: release vet test ## Make everything
 
-build: # BUild darwin
+build: # Build darwin
 	goreleaser --config .goreleaser-darwin.yml --debug --rm-dist --skip-publish --skip-validate
 
 release: ## Build releases

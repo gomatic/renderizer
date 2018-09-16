@@ -9,21 +9,20 @@ import (
 	"os"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/gomatic/funcmap"
+	"github.com/imdario/mergo"
 	"github.com/urfave/cli"
 )
 
 //
-func renderizer(ctx *cli.Context) error {
+func renderizer(_ *cli.Context) error {
 
 	globalContext := map[string]interface{}{}
 	args := []string{}
 
 	// Iterate the remaining arguments for variable overrides and file names.
 
-	i := 0
 	for a, arg := range settings.Arguments {
 		if len(arg) == 0 {
 			continue
@@ -41,111 +40,50 @@ func renderizer(ctx *cli.Context) error {
 			continue
 		}
 
+		currentContext := map[string]interface{}{}
+
 		nameValuePair := strings.SplitN(strings.TrimLeft(arg, "-"), "=", 2)
 		currentName := nameValuePair[0]
-		i += 1
 
-		if settings.Capitalize {
-			currentName = fmt.Sprintf("%s%s", strings.ToTitle(currentName[:1]), strings.ToLower(currentName[1:]))
+		// Iterate dotted notation and construct a map from it.
+		var (
+			local = currentContext       // Iterative map-reference into globalContext
+			leaf  map[string]interface{} // Keep a reference to the leaf node
+			last  string                 // Keep the leaf node's map-key
+		)
+		for _, name := range strings.Split(currentName, ".") {
+			if settings.Capitalize {
+				name = fmt.Sprintf("%s%s", strings.ToTitle(name[:1]), strings.ToLower(name[1:]))
+			}
+
+			local[name] = map[string]interface{}{}
+			leaf, last, local = local, name, local[name].(map[string]interface{})
 		}
 
 		var currentValue interface{}
 		if len(nameValuePair) == 1 { // i.e. a boolean
-			currentValue = true
+			leaf[last] = []interface{}{true}
 		} else {
-			currentValue = typer(nameValuePair[1])
+			leaf[last] = []interface{}{typer(nameValuePair[1])}
 		}
 
 		if settings.Debugging {
-			log.Printf("file:%d var:%d name:%s value:%+v", a, i, currentName, currentValue)
+			log.Printf("index:%d name:%s value:%+v", a, currentName, currentValue)
 		}
 
-		// Build lists and try to keep the type of the slice consistent with the values.
-		if values, exists := globalContext[currentName]; exists {
-			switch valuesType := values.(type) {
-			case string:
-				switch y := currentValue.(type) {
-				case string:
-					globalContext[currentName] = []string{valuesType, y}
-				default:
-					globalContext[currentName] = []interface{}{valuesType, y}
-				}
-			case int:
-				switch y := currentValue.(type) {
-				case int:
-					globalContext[currentName] = []int64{int64(valuesType), int64(y)}
-				default:
-					globalContext[currentName] = []interface{}{valuesType, y}
-				}
-			case int64:
-				switch y := currentValue.(type) {
-				case int64:
-					globalContext[currentName] = []int64{valuesType, y}
-				default:
-					globalContext[currentName] = []interface{}{valuesType, y}
-				}
-			case float64:
-				switch y := currentValue.(type) {
-				case float64:
-					globalContext[currentName] = []float64{valuesType, y}
-				default:
-					globalContext[currentName] = []interface{}{valuesType, y}
-				}
-			case bool:
-				switch y := currentValue.(type) {
-				case bool:
-					globalContext[currentName] = []bool{valuesType, y}
-				default:
-					globalContext[currentName] = []interface{}{valuesType, y}
-				}
-			case *time.Time:
-				switch y := currentValue.(type) {
-				case *time.Time:
-					globalContext[currentName] = []*time.Time{valuesType, y}
-				default:
-					globalContext[currentName] = []interface{}{valuesType, y}
-				}
-			case []string:
-				switch y := currentValue.(type) {
-				case string:
-					globalContext[currentName] = append(valuesType, y)
-				default:
-					globalContext[currentName] = append(toInterfaceSlice(valuesType), y)
-				}
-			case []int64:
-				switch y := currentValue.(type) {
-				case int64:
-					globalContext[currentName] = append(valuesType, y)
-				default:
-					globalContext[currentName] = append(toInterfaceSlice(valuesType), y)
-				}
-			case []float64:
-				switch y := currentValue.(type) {
-				case float64:
-					globalContext[currentName] = append(valuesType, y)
-				default:
-					globalContext[currentName] = append(toInterfaceSlice(valuesType), y)
-				}
-			case []bool:
-				switch y := currentValue.(type) {
-				case bool:
-					globalContext[currentName] = append(valuesType, y)
-				default:
-					globalContext[currentName] = append(toInterfaceSlice(valuesType), y)
-				}
-			case []*time.Time:
-				switch y := currentValue.(type) {
-				case *time.Time:
-					globalContext[currentName] = append(valuesType, y)
-				default:
-					globalContext[currentName] = append(toInterfaceSlice(valuesType), y)
-				}
-			case []interface{}:
-				globalContext[currentName] = append(valuesType, currentValue)
-			}
-		} else {
-			globalContext[currentName] = currentValue
-		}
+		// log.Printf("currentContext: %[1]T %#[1]v", currentContext)
+		mergo.Merge(&globalContext, currentContext, mergo.WithAppendSlice)
+		// log.Printf("globalContext: %[1]T %#[1]v", globalContext)
+	}
+
+	retyper(globalContext)
+
+	// Dump the settings
+
+	if settings.Debugging {
+		log.Printf("globalContext: %#v", globalContext)
+	} else if settings.Verbose {
+		log.Printf("globalContext: %+v", globalContext)
 	}
 
 	// If there's no files, read from stdin.

@@ -1,5 +1,6 @@
 github.com/gomatic/funcmap v0.0.0-20170407194050-9ab29796c307 h1:vdV1B6lc0iOnze2OvoHREif4bzaYTY5WHo1+HhBD2io=
 github.com/gomatic/funcmap v0.0.0-20170407194050-9ab29796c307/go.mod h1:tgYMANYRbfiPtGpM0in6m2dnRENPq5Oj0f+eJkTBT1E=
+github.com/imdario/mergo v0.3.6 h1:xTNEAn+kxVO7dTZGu0CegyqKZmoWFI0rF8UxjlB2d28=
 github.com/imdario/mergo v0.3.6/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 h1:PJPDf8OUfOK1bb/NeTKd4f1QXZItOX389VN3B6qC8ro=
 github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=

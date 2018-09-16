@@ -8,49 +8,43 @@ Render Go text templates from the command line.
 
 Supports providing top-level name/value pairs on the command line:
 
-    renderizer --name=value --top=first template-file
+    echo 'Hello, {{.User}}' | renderizer --user=${USER}
 
-Sets:
+And read from the environment: 
 
-    Name: value
-    Top: first
+    echo 'Hello, {{.env.User}}' | renderizer
 
-**NOTE:**
+## Usage:
 
-- Template values are provided `--name=value`.
-- Renderizer controls are provided using `-NAME[=value]`.
+    renderizer [OPTIONS] [--name=value]... [template-file]...
 
-## Example
-
-First:
-
-    git clone https://github.com/gomatic/renderizer.git
-    cd renderizer
-    go build
+## Examples
 
 Render the `pod.yaml` using values from `test/.renderizer.yaml`:
 
-    renderizer -S=test/.renderizer.yaml test/pod.yaml
+    renderizer --settings=example/pod/.pod.yaml example/pod/pod.yaml.tmpl
 
 Or set `RENDERIZER` in the environment:
 
-    RENDERIZER=test/.renderizer.yaml renderizer test/pod.yaml
+    RENDERIZER=example/.pod.yaml renderizer example/pod/pod.yaml.tmpl
 
 Alternatively, it'll try `.renderizer.yaml` in the current directory.
 
-    (cd test; renderizer pod.yaml)
+    (cd example/pod; renderizer pod.yaml)
 
-Next, override the `deployment` value to render the "dev" `pod.yaml` (after `cd test/`):
+Next, override the `deployment` value to render the "dev" `pod.yaml` (after `cd example/pod`):
 
     renderizer --deployment=dev --name='spaced out' pod.yaml
 
-## Configuration
+For more examples, see the [`examples`](examples) folder.
 
-### Settings `-S=`
+# Configuration
+
+### Settings
 
 Settings can be loaded from a yaml:
 
-    renderizer -S=renderizer.yaml --name=value --top=first template-file
+    renderizer --settings=.renderizer.yaml --name=value --top=first template-file
 
 ### Capitalization `-C`
 
@@ -65,17 +59,19 @@ Sets:
     Name: value
     top: first
 
-### Missing Keys `-M=`
+### Missing Keys
 
 Control the missingkeys template-engine option:
 
-    renderizer -M=zero --top=first template-file
+    renderizer --missing=zero --top=first template-file
 
-### Environment `-E=`
+### Environment
 
-Provide a default value for missing environment variables:
+Provide a name for the environment variables:
 
-    renderizer -E=--missing-- template-file
+    renderizer --environment=env template-file
+
+It defaults to `env` which is effectively the same as the above `--environment=env`.
 
 ## Template Functions
 
