@@ -16,10 +16,10 @@ import (
 var (
 	version  = "2.0.0"
 	commit   = "unknown"
-	date     = "none"
+	date     = "20060102T150405"
 	selfn, _ = osext.Executable()
 	selfz    = filepath.Base(selfn)
-	semver   = version + "-" + commit[:7] + "." + date
+	semver   = version + "-" + date + "." + commit[:7]
 	appver   = selfz + "/" + semver
 )
 
