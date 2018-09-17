@@ -17,7 +17,7 @@ build: # Build darwin
 	goreleaser --config .goreleaser-darwin.yml --debug --rm-dist --skip-publish --skip-validate
 
 release: ## Build releases
-	goreleaser --rm-dist --skip-publish --skip-validate	
+	goreleaser --rm-dist --skip-publish --skip-validate
 
 vet test: build ## Run tests or vet
 	go $@ ./...

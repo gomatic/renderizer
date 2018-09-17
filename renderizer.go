@@ -87,7 +87,7 @@ func renderizer(_ *cli.Context) error {
 	// If there's no files, read from stdin.
 	files := args
 	if len(args) == 0 {
-		if settings.Stdin {
+		if settings.Stdin && settings.Verbose {
 			log.Println("source: stdin")
 		}
 		files = []string{""}
