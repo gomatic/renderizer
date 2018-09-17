@@ -4,15 +4,15 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{replace .Name " " "_" -1 | cleanse | lower}}
+  name: {{replace .Name " " "_" -1 | identifier | lower}}
   namespace: {{.App}}-{{.Deployment}}
   labels:
     app: &app_name {{.App}}
 spec:
   containers: {{$p := .}}{{range $i, $c := .Containers}}
-    - name: &name_{{index $i}} {{.Name}}
+    - name: &name_{{$i}} {{.Name}}
       image: {{$p.Repo}}/{{$p.App}}-{{.Name}}
       ports:
-        - name: *name_{{index $i}}
+        - name: *name_{{$i}}
           containerPort: {{inc $p.BasePort $i}}
           protocol: TCP{{end}}

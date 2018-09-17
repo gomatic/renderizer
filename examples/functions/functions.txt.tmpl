@@ -50,9 +50,15 @@ line {{next}} mod               = 12345 % 10 = {{mod 10 12345}}
 line {{next}} rand              = {{rand}}
 line {{next}} lower             = {{lower "LOWER"}}
 line {{next}} upper             = {{upper "upper"}}
-line {{next}} title             = {{title "this is a title"}}
-line {{next}} title             = {{title "THIS IS A TITLE"}}
-line {{next}} initcap           = {{initcap "this is a title"}}
+line {{next}} title             = {{title "this is a title from lowercase"}}
+line {{next}} title             = {{title "THIS IS A TITLE FROM UPPERCASE"}}
+line {{next}} initcap           = {{initcap "this is initcap from lowercase"}}
+line {{next}} initcap           = {{initcap "THIS IS INITCAP FROM UPPERCASE"}}
+line {{next}} cleanser          = {{cleanser "[^works]" "abcdefghijklmnopqrstuvwxyz"}}
+line {{next}} cleanse           = [{{cleanse " abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ "}}]
+line {{next}} cleanse           = {{cleanse "WOR1234567890KS"}}
+line {{next}} cleanse           = {{cleanse "WOR!@#$%^&*()KS"}}
+line {{next}} cleanse           = {{cleanse "WOR`~-=_+[]{};':\",.<>/?KS"}}
 line {{next}} cleanse           = {{cleanse "zaq!xsw@cde#vfr$bgt%nhy^mju&,ki*.lo(/;p)"}}
 line {{next}} now               = {{now}}
 line {{next}} pausing 1s        = {{pause 1000}}

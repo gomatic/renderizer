@@ -13,6 +13,7 @@ import (
 	"github.com/gomatic/funcmap"
 	"github.com/imdario/mergo"
 	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 )
 
 //
@@ -62,58 +63,38 @@ func renderizer(_ *cli.Context) error {
 
 		var currentValue interface{}
 		if len(nameValuePair) == 1 { // i.e. a boolean
-			leaf[last] = []interface{}{true}
+			currentValue = []interface{}{true}
 		} else {
-			leaf[last] = []interface{}{typer(nameValuePair[1])}
+			currentValue = []interface{}{typer(nameValuePair[1])}
 		}
+		leaf[last] = currentValue
 
 		if settings.Debugging {
 			log.Printf("index:%d name:%s value:%+v", a, currentName, currentValue)
 		}
 
-		// log.Printf("currentContext: %[1]T %#[1]v", currentContext)
+		if settings.Debugging {
+			log.Printf("currentContext: %[1]T %#[1]v", currentContext)
+		}
 		mergo.Merge(&globalContext, currentContext, mergo.WithAppendSlice)
-		// log.Printf("globalContext: %[1]T %#[1]v", globalContext)
+		if settings.Debugging {
+			log.Printf("globalContext: %[1]T %#[1]v", globalContext)
+		}
 	}
 
-	retyper(globalContext)
-
-	// Dump the settings
-
-	if settings.Debugging {
-		log.Printf("globalContext: %#v", globalContext)
-	} else if settings.Verbose {
-		log.Printf("globalContext: %+v", globalContext)
-	}
+	globalContext = retyper(globalContext, retypeSingleElementSlice)
 
 	// If there's no files, read from stdin.
 	files := args
 	if len(args) == 0 {
-		stat, _ := os.Stdin.Stat()
-		isTTY := (stat.Mode() & os.ModeCharDevice) != 0
-		if isTTY {
+		if settings.Stdin {
 			log.Println("source: stdin")
 		}
 		files = []string{""}
 	}
 
 	// Copy any loaded keys into the globalContext unless they already exist, i.e. they were provided on the command line.
-	for n, v := range settings.Config {
-		if _, exists := globalContext[n]; !exists {
-			switch x := v.(type) {
-			case int8:
-				globalContext[n] = int64(x)
-			case int16:
-				globalContext[n] = int64(x)
-			case int32:
-				globalContext[n] = int64(x)
-			case int:
-				globalContext[n] = int64(x)
-			default:
-				globalContext[n] = v
-			}
-		}
-	}
+	mergo.Merge(&globalContext, settings.Config)
 
 	if settings.Environment != "" || len(args) == 0 {
 		v := make(map[string]string)
@@ -129,7 +110,11 @@ func renderizer(_ *cli.Context) error {
 	if settings.Debugging {
 		log.Printf("globalContext: %#v", globalContext)
 	} else if settings.Verbose {
-		log.Printf("globalContext: %+v", globalContext)
+		if o, err := yaml.Marshal(globalContext); err != nil {
+			log.Printf("globalContext: %+v", globalContext)
+		} else {
+			log.Printf("globalContext:\n%s", o)
+		}
 	}
 
 	// Execute each template

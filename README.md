@@ -20,7 +20,7 @@ And read from the environment:
 
 ## Examples
 
-Render the `pod.yaml` using values from `examples/pod/.renderizer.yaml`:
+Render the `pod.yaml.tmpl` using values from `examples/pod/.renderizer.yaml`:
 
     renderizer --settings=examples/pod/.pod.yaml examples/pod/pod.yaml.tmpl
 
@@ -28,13 +28,13 @@ Or set `RENDERIZER` in the environment:
 
     RENDERIZER=examples/.pod.yaml renderizer examples/pod/pod.yaml.tmpl
 
-Alternatively, it'll try `.renderizer.yaml` in the current directory.
+Alternatively, it'll try `.pod.yaml` in the current directory.
 
-    (cd examples/pod; renderizer pod.yaml)
+    (cd examples/pod; renderizer)
 
-Next, override the `deployment` value to render the "dev" `pod.yaml` (after `cd examples/pod`):
+Next, override the `deployment` value to render the "dev" `pod.yaml.tmpl` (after `cd examples/pod`):
 
-    renderizer --deployment=dev --name='spaced out' pod.yaml
+    renderizer --deployment=dev --name='spaced out'
 
 For more examples, see the [`examples`](examples) folder.
 
@@ -42,9 +42,9 @@ For more examples, see the [`examples`](examples) folder.
 
 ### Settings
 
-Settings can be loaded from a yaml:
+Settings can be loaded from any YAMLs:
 
-    renderizer --settings=.renderizer.yaml --name=value --top=first template-file
+    renderizer --settings=.settings1.yaml --settings=.settings2.yaml --name=value template-file
 
 ### Capitalization `-C`
 

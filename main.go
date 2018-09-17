@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
@@ -126,7 +127,22 @@ func main() {
 		settings.Stdin = settings.Stdin || (fi.Mode()&os.ModeCharDevice) == 0
 
 		settings.Arguments = append(settings.Arguments, ctx.Args()...)
-		if len(settings.Arguments) == 0 && !settings.Stdin {
+
+		mainName, mainTemplate, noTemplate := "", "", true
+		if largs := len(settings.Arguments); largs > 0 {
+			i, found := largs-1, -1
+			for ; i > 0; i-- {
+				if !strings.HasPrefix(settings.Arguments[i], "--") {
+					found = i
+				}
+			}
+			if found >= 0 {
+				noTemplate = false
+				mainTemplate = settings.Arguments[found]
+			}
+		}
+
+		if mainTemplate == "" && !settings.Stdin {
 			// Try default the template name
 			folderName, err := os.Getwd()
 			if err != nil {
@@ -143,12 +159,16 @@ func main() {
 						if settings.Verbose {
 							log.Printf("using template: %+v", name)
 						}
-						settings.Arguments = []string{name}
+						mainTemplate = name
 					}
 				}
 			}
-
 		}
+
+		if noTemplate {
+			settings.Arguments = append(settings.Arguments, mainTemplate)
+		}
+		mainName = strings.Split(strings.TrimLeft(filepath.Base(mainTemplate), "."), ".")[0]
 
 		switch settings.MissingKey {
 		case "zero", "error", "default", "invalid":
@@ -158,12 +178,8 @@ func main() {
 		}
 
 		if len(configs) == 0 {
-			name := "renderizer"
-			if len(settings.Arguments) >= 1 {
-				name = strings.Split(strings.TrimLeft(filepath.Base(settings.Arguments[0]), "."), ".")[0]
-			}
 			settings.Defaulted = true
-			settings.ConfigFiles = []string{"." + name + ".yaml"}
+			settings.ConfigFiles = []string{"." + mainName + ".yaml"}
 		} else {
 			settings.ConfigFiles = configs
 		}
@@ -175,18 +191,28 @@ func main() {
 					return err
 				}
 			} else {
-				yaml.Unmarshal(in, &settings.Config)
+				loaded := map[string]interface{}{}
+				err := yaml.Unmarshal(in, &loaded)
+				if err != nil {
+					return err
+				}
 				if settings.Verbose || settings.Defaulted {
 					log.Printf("using settings: %+v", settings.ConfigFiles)
 				}
+				loaded = retyper(loaded)
+				if settings.Debugging {
+					log.Printf("loaded: %s = %#v", config, loaded)
+				} else if settings.Verbose {
+					log.Printf("loaded: %s = %+v", config, loaded)
+				}
+				mergo.Merge(&settings.Config, loaded)
 			}
-			if settings.Debugging {
-				log.Printf("--settings:%#v", settings)
-				log.Printf("loaded: %#v", settings.Config)
-			} else if settings.Verbose {
-				log.Printf("--settings:%+v", settings)
-				log.Printf("loaded: %+v", settings.Config)
-			}
+		}
+
+		if settings.Debugging {
+			log.Printf("--settings:%#v", settings)
+		} else if settings.Verbose {
+			log.Printf("--settings:%+v", settings)
 		}
 
 		return nil
@@ -203,6 +229,7 @@ func main() {
 				next = false
 				continue
 			}
+			// TODO convert all '--name value' parameters to --name=value
 			if strings.HasPrefix(larg, "--") {
 				flag := larg
 				parts := strings.SplitN(larg, "=", 2)
