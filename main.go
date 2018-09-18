@@ -2,16 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
 	"github.com/urfave/cli"
-	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -34,8 +29,6 @@ type Settings struct {
 	ConfigFiles cli.StringSlice
 	Defaulted   bool
 	Config      map[string]interface{}
-	//
-	Arguments []string
 	// Add the environment map to the variables.
 	Environment string
 	//
@@ -58,7 +51,6 @@ var settings = Settings{
 	Environment: "env",
 	Config:      map[string]interface{}{},
 	ConfigFiles: []string{},
-	Arguments:   []string{},
 }
 
 //
@@ -69,8 +61,6 @@ func main() {
 	app.UsageText = "Template renderer"
 	app.Version = appver
 	app.EnableBashCompletion = true
-
-	configs := cli.StringSlice{}
 
 	app.Commands = []cli.Command{
 		{
@@ -87,7 +77,7 @@ func main() {
 		cli.StringSliceFlag{
 			Name:   "settings, S, s",
 			Usage:  `load the settings from the provided YAMLs (default: ".renderizer.yaml")`,
-			Value:  &configs,
+			Value:  &settings.ConfigFiles,
 			EnvVar: "RENDERIZER",
 		},
 		cli.StringFlag{
@@ -120,138 +110,6 @@ func main() {
 		},
 	}
 
-	app.Before = func(ctx *cli.Context) error {
-
-		fi, _ := os.Stdin.Stat()
-
-		settings.Stdin = settings.Stdin || (fi.Mode()&os.ModeCharDevice) == 0
-
-		settings.Arguments = append(settings.Arguments, ctx.Args()...)
-
-		mainName, mainTemplate, noTemplate := "", "", true
-		if largs := len(settings.Arguments); largs > 0 {
-			i, found := largs-1, -1
-			for ; i > 0; i-- {
-				if !strings.HasPrefix(settings.Arguments[i], "--") {
-					found = i
-				}
-			}
-			if found >= 0 {
-				noTemplate = false
-				mainTemplate = settings.Arguments[found]
-			}
-		}
-
-		if mainTemplate == "" && !settings.Stdin {
-			// Try default the template name
-			folderName, err := os.Getwd()
-			if err != nil {
-				log.Println(err)
-				folderName = "renderizer"
-			} else {
-				folderName = filepath.Base(folderName)
-			}
-
-			for _, ext := range []string{".tmpl", ""} {
-				for _, try := range []string{"yaml", "json", "html", "txt", "xml", ""} {
-					name := fmt.Sprintf("%s.%s%s", folderName, try, ext)
-					if _, err := os.Stat(name); err == nil {
-						if settings.Verbose {
-							log.Printf("using template: %+v", name)
-						}
-						mainTemplate = name
-					}
-				}
-			}
-		}
-
-		if noTemplate {
-			settings.Arguments = append(settings.Arguments, mainTemplate)
-		}
-		mainName = strings.Split(strings.TrimLeft(filepath.Base(mainTemplate), "."), ".")[0]
-
-		switch settings.MissingKey {
-		case "zero", "error", "default", "invalid":
-		default:
-			fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.MissingKey)
-			settings.MissingKey = "error"
-		}
-
-		if len(configs) == 0 {
-			settings.Defaulted = true
-			settings.ConfigFiles = []string{"." + mainName + ".yaml"}
-		} else {
-			settings.ConfigFiles = configs
-		}
-
-		for _, config := range settings.ConfigFiles {
-			in, err := ioutil.ReadFile(config)
-			if err != nil {
-				if !settings.Defaulted {
-					return err
-				}
-			} else {
-				loaded := map[string]interface{}{}
-				err := yaml.Unmarshal(in, &loaded)
-				if err != nil {
-					return err
-				}
-				if settings.Verbose || settings.Defaulted {
-					log.Printf("using settings: %+v", settings.ConfigFiles)
-				}
-				loaded = retyper(loaded)
-				if settings.Debugging {
-					log.Printf("loaded: %s = %#v", config, loaded)
-				} else if settings.Verbose {
-					log.Printf("loaded: %s = %+v", config, loaded)
-				}
-				mergo.Merge(&settings.Config, loaded)
-			}
-		}
-
-		if settings.Debugging {
-			log.Printf("--settings:%#v", settings)
-		} else if settings.Verbose {
-			log.Printf("--settings:%+v", settings)
-		}
-
-		return nil
-	}
-
-	// Remove args that are not processed by urfave/cli
-	args := []string{os.Args[0]}
-	if len(os.Args) > 1 {
-		next := false
-		for _, arg := range os.Args[1:] {
-			larg := strings.ToLower(arg)
-			if next {
-				args = append(args, arg)
-				next = false
-				continue
-			}
-			// TODO convert all '--name value' parameters to --name=value
-			if strings.HasPrefix(larg, "--") {
-				flag := larg
-				parts := strings.SplitN(larg, "=", 2)
-				if len(parts) == 2 {
-					flag = parts[0]
-				}
-				switch flag[2:] {
-				case "settings", "missing":
-					// If the flag requires a parameter but it is not specified with an =, grab the next argument too.
-					if !strings.Contains(larg, "=") {
-						next = true
-					}
-					fallthrough
-				case "debug", "verbose", "version", "stdin":
-					args = append(args, arg)
-					continue
-				}
-			}
-			settings.Arguments = append(settings.Arguments, arg)
-		}
-	}
-
 	app.Action = renderizer
-	app.Run(args)
+	app.Run(os.Args)
 }

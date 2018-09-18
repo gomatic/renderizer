@@ -17,14 +17,45 @@ import (
 )
 
 //
-func renderizer(_ *cli.Context) error {
+func renderizer(con *cli.Context) error {
+
+	for _, config := range settings.ConfigFiles {
+		in, err := ioutil.ReadFile(config)
+		if err != nil {
+			if !settings.Defaulted {
+				return err
+			}
+		} else {
+			loaded := map[string]interface{}{}
+			err := yaml.Unmarshal(in, &loaded)
+			if err != nil {
+				return err
+			}
+			if settings.Verbose || settings.Defaulted {
+				log.Printf("using settings: %+v", settings.ConfigFiles)
+			}
+			loaded = retyper(loaded)
+			if settings.Debugging {
+				log.Printf("loaded: %s = %#v", config, loaded)
+			} else if settings.Verbose {
+				log.Printf("loaded: %s = %+v", config, loaded)
+			}
+			mergo.Merge(&settings.Config, loaded)
+		}
+	}
+
+	if settings.Debugging {
+		log.Printf("--settings:%#v", settings)
+	} else if settings.Verbose {
+		log.Printf("--settings:%+v", settings)
+	}
 
 	globalContext := map[string]interface{}{}
 	args := []string{}
 
 	// Iterate the remaining arguments for variable overrides and file names.
 
-	for a, arg := range settings.Arguments {
+	for a, arg := range con.Args() {
 		if len(arg) == 0 {
 			continue
 		} else if arg[0] != '-' {
