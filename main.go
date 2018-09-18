@@ -218,40 +218,6 @@ func main() {
 		return nil
 	}
 
-	// Remove args that are not processed by urfave/cli
-	args := []string{os.Args[0]}
-	if len(os.Args) > 1 {
-		next := false
-		for _, arg := range os.Args[1:] {
-			larg := strings.ToLower(arg)
-			if next {
-				args = append(args, arg)
-				next = false
-				continue
-			}
-			// TODO convert all '--name value' parameters to --name=value
-			if strings.HasPrefix(larg, "--") {
-				flag := larg
-				parts := strings.SplitN(larg, "=", 2)
-				if len(parts) == 2 {
-					flag = parts[0]
-				}
-				switch flag[2:] {
-				case "settings", "missing":
-					// If the flag requires a parameter but it is not specified with an =, grab the next argument too.
-					if !strings.Contains(larg, "=") {
-						next = true
-					}
-					fallthrough
-				case "debug", "verbose", "version", "stdin":
-					args = append(args, arg)
-					continue
-				}
-			}
-			settings.Arguments = append(settings.Arguments, arg)
-		}
-	}
-
 	app.Action = renderizer
-	app.Run(args)
+	app.Run(os.Args)
 }
