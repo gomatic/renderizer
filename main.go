@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	version  = "2.0.0"
+	version  = "2.0.4"
 	commit   = "unknown"
 	date     = "20060102T150405"
 	selfn, _ = osext.Executable()
