@@ -20,7 +20,6 @@ import (
 func renderizer(_ *cli.Context) error {
 
 	globalContext := map[string]interface{}{}
-	args := []string{}
 
 	// Iterate the remaining arguments for variable overrides and file names.
 
@@ -28,7 +27,6 @@ func renderizer(_ *cli.Context) error {
 		if len(arg) == 0 {
 			continue
 		} else if arg[0] != '-' {
-			args = append(args, arg)
 			continue
 		}
 
@@ -85,8 +83,8 @@ func renderizer(_ *cli.Context) error {
 	globalContext = retyper(globalContext, retypeSingleElementSlice)
 
 	// If there's no files, read from stdin.
-	files := args
-	if len(args) == 0 {
+	files := settings.Templates
+	if len(files) == 0 {
 		if settings.Stdin && settings.Verbose {
 			log.Println("source: stdin")
 		}
@@ -96,7 +94,7 @@ func renderizer(_ *cli.Context) error {
 	// Copy any loaded keys into the globalContext unless they already exist, i.e. they were provided on the command line.
 	mergo.Merge(&globalContext, settings.Config)
 
-	if settings.Environment != "" || len(args) == 0 {
+	if settings.Environment != "" || len(files) == 0 {
 		v := make(map[string]string)
 		for _, item := range os.Environ() {
 			splits := strings.Split(item, "=")

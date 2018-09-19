@@ -36,6 +36,8 @@ type Settings struct {
 	Config      map[string]interface{}
 	//
 	Arguments []string
+	//
+	Templates []string
 	// Add the environment map to the variables.
 	Environment string
 	//
@@ -59,6 +61,7 @@ var settings = Settings{
 	Config:      map[string]interface{}{},
 	ConfigFiles: []string{},
 	Arguments:   []string{},
+	Templates:   []string{},
 }
 
 //
@@ -128,21 +131,7 @@ func main() {
 
 		settings.Arguments = append(settings.Arguments, ctx.Args()...)
 
-		mainName, mainTemplate, noTemplate := "", "", true
-		if largs := len(settings.Arguments); largs > 0 {
-			i, found := largs-1, -1
-			for ; i > 0; i-- {
-				if !strings.HasPrefix(settings.Arguments[i], "--") {
-					found = i
-				}
-			}
-			if found >= 0 {
-				noTemplate = false
-				mainTemplate = settings.Arguments[found]
-			}
-		}
-
-		if mainTemplate == "" && !settings.Stdin {
+		if len(settings.Templates) == 0 && !settings.Stdin {
 			// Try default the template name
 			folderName, err := os.Getwd()
 			if err != nil {
@@ -152,23 +141,32 @@ func main() {
 				folderName = filepath.Base(folderName)
 			}
 
-			for _, ext := range []string{".tmpl", ""} {
-				for _, try := range []string{"yaml", "json", "html", "txt", "xml", ""} {
-					name := fmt.Sprintf("%s.%s%s", folderName, try, ext)
-					if _, err := os.Stat(name); err == nil {
-						if settings.Verbose {
-							log.Printf("using template: %+v", name)
+			name := func() string {
+				for _, base := range []string{folderName, "renderizer"} {
+					for _, ext := range []string{".tmpl", ""} {
+						for _, try := range []string{"yaml", "json", "html", "txt", "xml", ""} {
+							name := fmt.Sprintf("%s.%s%s", base, try, ext)
+							if _, err := os.Stat(name); err == nil {
+								if settings.Verbose {
+									log.Printf("using template: %+v", name)
+								}
+								return name
+							}
 						}
-						mainTemplate = name
 					}
 				}
+				return ""
+			}()
+			if name != "" {
+				settings.Templates = append(settings.Templates, name)
 			}
 		}
 
-		if noTemplate {
-			settings.Arguments = append(settings.Arguments, mainTemplate)
+		if len(settings.Templates) == 0 {
+			return cli.NewExitError("missing template name", 1)
 		}
-		mainName = strings.Split(strings.TrimLeft(filepath.Base(mainTemplate), "."), ".")[0]
+
+		mainName := strings.Split(strings.TrimLeft(filepath.Base(settings.Templates[0]), "."), ".")[0]
 
 		switch settings.MissingKey {
 		case "zero", "error", "default", "invalid":
@@ -248,13 +246,22 @@ func main() {
 					continue
 				}
 			} else if strings.HasPrefix(larg, "-") {
-				switch larg[1:] {
+				switch arg[1:] {
 				case "C":
+				case "S":
+					if !strings.Contains(arg, "=") {
+						next = true
+					}
+					fallthrough
 				default:
 					args = append(args, arg)
 					continue
 				}
+			} else {
+				settings.Templates = append(settings.Templates, arg)
+				continue
 			}
+
 			settings.Arguments = append(settings.Arguments, arg)
 		}
 	}
