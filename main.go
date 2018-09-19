@@ -196,7 +196,7 @@ func main() {
 				if err != nil {
 					return err
 				}
-				if settings.Verbose || settings.Defaulted {
+				if settings.Debugging || settings.Verbose {
 					log.Printf("using settings: %+v", settings.ConfigFiles)
 				}
 				loaded = retyper(loaded)
