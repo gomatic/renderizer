@@ -243,7 +243,14 @@ func main() {
 						next = true
 					}
 					fallthrough
-				case "debug", "verbose", "version", "stdin":
+				case "debug", "verbose", "version", "stdin", "help":
+					args = append(args, arg)
+					continue
+				}
+			} else if strings.HasPrefix(larg, "-") {
+				switch larg[1:] {
+				case "C":
+				default:
 					args = append(args, arg)
 					continue
 				}
