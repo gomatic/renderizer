@@ -18,6 +18,7 @@ build: # Build darwin
 
 release: ## Build releases
 	goreleaser --rm-dist --skip-publish --skip-validate
+	scripts/rename-release
 
 vet test: build ## Run tests or vet
 	go $@ ./...

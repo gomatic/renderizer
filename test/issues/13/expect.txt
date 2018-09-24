@@ -1,0 +1,6 @@
+
+echo "16.04 aka ubu1604"
+
+echo "18.04 aka ubu1804"
+
+

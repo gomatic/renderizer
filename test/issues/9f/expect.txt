@@ -1,0 +1,4 @@
+map[B:map[C:kills(a,b)]] == map[B:map[C:kills(a,b)]]
+map[C:kills(a,b)] == map[C:kills(a,b)]
+kills(a,b) == kills(a,b)
+

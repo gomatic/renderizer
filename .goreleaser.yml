@@ -2,6 +2,7 @@ project_name: renderizer
 builds:
   - 
     binary: renderizer
+    main: ./cmd/renderizer/main.go
     goos:
       - windows
       - darwin

@@ -5,7 +5,7 @@ line {{next}} debug_toggle       = {{debug_toggle}}
 line {{next}} debugging          = {{if debugging}}debugging{{end}}
 line {{next}} debug              = {{debug "message"}}
 line {{next}} command_line       = {{command_line}}
-line {{next}} PWD                = {{environment "PWD"}}
+line {{next}} RENDERIZER_VERSION = {{environment "RENDERIZER_VERSION" | dirname}}
 line {{next}} ip_math            = {{ip_math "[-1].[+2].[-3].[+1,%10]" "193.166.3.39"}}
 line {{next}} ip4_inc           = {{ip4_inc 2 -3 "192.168.3.0"}}
 line {{next}} ip4_next          = {{ip4_next 2 0 4 "192.168.3.0"}}
@@ -60,6 +60,20 @@ line {{next}} cleanse           = {{cleanse "WOR1234567890KS"}}
 line {{next}} cleanse           = {{cleanse "WOR!@#$%^&*()KS"}}
 line {{next}} cleanse           = {{cleanse "WOR`~-=_+[]{};':\",.<>/?KS"}}
 line {{next}} cleanse           = {{cleanse "zaq!xsw@cde#vfr$bgt%nhy^mju&,ki*.lo(/;p)"}}
+
+line {{next}} dirname           = {{dirname "a/b/c/d"}}
+line {{next}} dirname           = {{dirname "/a/b/c/d"}}
+line {{next}} dirname           = {{dirname "d"}}
+line {{next}} dirname           = {{dirname ""}}
+line {{next}} basename          = {{environment "PWD" | basename}}
+line {{next}} basename          = {{basename "/a/b/c"}}
+line {{next}} basename          = {{basename "/a/b/c.ext"}}
+line {{next}} basename          = {{basename "/a/b/c.ext" "ext"}}
+line {{next}} basename          = {{basename "c.ext.xyz.last"}}
+line {{next}} basename          = {{basename "c.ext.xyz.last" "last"}}
+line {{next}} basename          = {{basename "c.ext.xyz.last" "last" "xyz"}}
+line {{next}} basename          = {{basename "c.ext.xyz.last" "last" "xyz" "ext"}}
+
 line {{next}} now               = {{now}}
 line {{next}} pausing 1s        = {{pause 1000}}
 line {{next}} now               = {{now}}

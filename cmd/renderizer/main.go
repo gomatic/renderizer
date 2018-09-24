@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gomatic/renderizer/pkg/renderizer"
 	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
 	"github.com/urfave/cli"
@@ -15,7 +16,7 @@ import (
 )
 
 var (
-	version  = "2.0.4"
+	version  = "2.0.5"
 	commit   = "unknown"
 	date     = "20060102T150405"
 	selfn, _ = osext.Executable()
@@ -26,42 +27,25 @@ var (
 
 //
 type Settings struct {
-	// Capitalization is a positional toggles. The following variable names are capitalized (title-case).
-	Capitalize bool
-	// Set the Missing Key template option. Defaults to "error".
-	MissingKey string
+	Defaulted bool
 	// Configuration yaml
 	ConfigFiles cli.StringSlice
-	Defaulted   bool
-	Config      map[string]interface{}
 	//
-	Arguments []string
-	//
-	Templates []string
-	// Add the environment map to the variables.
-	Environment string
-	//
-	OutputExtension string
-	//
-	TimeFormat string
-	//
-	Stdin bool
-	//
-	Debugging bool
-	//
-	Verbose bool
+	Options renderizer.Options
 }
 
 //
 var settings = Settings{
-	Capitalize:  true,
-	MissingKey:  "error",
-	TimeFormat:  "20060102T150405",
-	Environment: "env",
-	Config:      map[string]interface{}{},
 	ConfigFiles: []string{},
-	Arguments:   []string{},
-	Templates:   []string{},
+	Options: renderizer.Options{
+		Config:      map[string]interface{}{},
+		Capitalize:  true,
+		MissingKey:  "error",
+		TimeFormat:  "20060102T150405",
+		Environment: "env",
+		Arguments:   []string{},
+		Templates:   []string{},
+	},
 }
 
 //
@@ -72,6 +56,8 @@ func main() {
 	app.UsageText = "Template renderer"
 	app.Version = appver
 	app.EnableBashCompletion = true
+
+	os.Setenv("RENDERIZER_VERSION", appver)
 
 	configs := cli.StringSlice{}
 
@@ -98,28 +84,37 @@ func main() {
 			Usage:       "the 'missingkey' template option (default|zero|error)",
 			Value:       "error",
 			EnvVar:      "RENDERIZER_MISSINGKEY",
-			Destination: &settings.MissingKey,
+			Destination: &settings.Options.MissingKey,
 		},
 		cli.StringFlag{
-			Name:   "environment, env, E, e",
-			Usage:  "load the environment into the variable name instead of as 'env'",
-			Value:  settings.Environment,
-			EnvVar: "RENDERIZER_ENVIRONMENT",
+			Name:        "environment, env, E, e",
+			Usage:       "load the environment into the variable name instead of as 'env'",
+			Value:       settings.Options.Environment,
+			EnvVar:      "RENDERIZER_ENVIRONMENT",
+			Destination: &settings.Options.Environment,
 		},
 		cli.BoolFlag{
 			Name:        "stdin, c",
 			Usage:       "read from stdin",
-			Destination: &settings.Stdin,
+			Destination: &settings.Options.Stdin,
+		},
+		cli.BoolFlag{
+			Name:        "testing, T",
+			Usage:       "configure runtime to provide consistent output",
+			EnvVar:      "RENDERIZER_TESTING",
+			Destination: &settings.Options.Testing,
 		},
 		cli.BoolFlag{
 			Name:        "debugging, debug, D",
 			Usage:       "enable debugging server",
-			Destination: &settings.Debugging,
+			EnvVar:      "RENDERIZER_DEBUG",
+			Destination: &settings.Options.Debugging,
 		},
 		cli.BoolFlag{
 			Name:        "verbose, V",
 			Usage:       "enable verbose output",
-			Destination: &settings.Verbose,
+			EnvVar:      "RENDERIZER_VEBOSE",
+			Destination: &settings.Options.Verbose,
 		},
 	}
 
@@ -127,27 +122,31 @@ func main() {
 
 		fi, _ := os.Stdin.Stat()
 
-		settings.Stdin = settings.Stdin || (fi.Mode()&os.ModeCharDevice) == 0
+		settings.Options.Stdin = settings.Options.Stdin || (fi.Mode()&os.ModeCharDevice) == 0
 
-		settings.Arguments = append(settings.Arguments, ctx.Args()...)
+		settings.Options.Arguments = append(settings.Options.Arguments, ctx.Args()...)
 
-		if len(settings.Templates) == 0 && !settings.Stdin {
+		mainName := ""
+		folderName, err := os.Getwd()
+		bases := []string{"renderizer"}
+		if err != nil {
+			log.Println(err)
+			mainName = "renderizer"
+		} else {
+			mainName = filepath.Base(folderName)
+			bases = []string{mainName, "renderizer"}
+		}
+
+		if len(settings.Options.Templates) == 0 && !settings.Options.Stdin {
 			// Try default the template name
-			folderName, err := os.Getwd()
-			if err != nil {
-				log.Println(err)
-				folderName = "renderizer"
-			} else {
-				folderName = filepath.Base(folderName)
-			}
 
 			name := func() string {
-				for _, base := range []string{folderName, "renderizer"} {
+				for _, base := range bases {
 					for _, ext := range []string{".tmpl", ""} {
 						for _, try := range []string{"yaml", "json", "html", "txt", "xml", ""} {
 							name := fmt.Sprintf("%s.%s%s", base, try, ext)
 							if _, err := os.Stat(name); err == nil {
-								if settings.Verbose {
+								if settings.Options.Verbose {
 									log.Printf("using template: %+v", name)
 								}
 								return name
@@ -158,21 +157,21 @@ func main() {
 				return ""
 			}()
 			if name != "" {
-				settings.Templates = append(settings.Templates, name)
+				settings.Options.Templates = append(settings.Options.Templates, name)
 			}
+
+			if len(settings.Options.Templates) == 0 {
+				return cli.NewExitError("missing template name", 1)
+			}
+
+			mainName = strings.Split(strings.TrimLeft(filepath.Base(settings.Options.Templates[0]), "."), ".")[0]
 		}
 
-		if len(settings.Templates) == 0 {
-			return cli.NewExitError("missing template name", 1)
-		}
-
-		mainName := strings.Split(strings.TrimLeft(filepath.Base(settings.Templates[0]), "."), ".")[0]
-
-		switch settings.MissingKey {
+		switch settings.Options.MissingKey {
 		case "zero", "error", "default", "invalid":
 		default:
-			fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.MissingKey)
-			settings.MissingKey = "error"
+			fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.Options.MissingKey)
+			settings.Options.MissingKey = "error"
 		}
 
 		if len(configs) == 0 {
@@ -194,22 +193,22 @@ func main() {
 				if err != nil {
 					return err
 				}
-				if settings.Debugging || settings.Verbose {
+				if settings.Options.Debugging || settings.Options.Verbose {
 					log.Printf("using settings: %+v", settings.ConfigFiles)
 				}
-				loaded = retyper(loaded)
-				if settings.Debugging {
+				loaded = settings.Options.Retyper(loaded)
+				if settings.Options.Debugging {
 					log.Printf("loaded: %s = %#v", config, loaded)
-				} else if settings.Verbose {
+				} else if settings.Options.Verbose {
 					log.Printf("loaded: %s = %+v", config, loaded)
 				}
-				mergo.Merge(&settings.Config, loaded)
+				mergo.Merge(&settings.Options.Config, loaded)
 			}
 		}
 
-		if settings.Debugging {
+		if settings.Options.Debugging {
 			log.Printf("--settings:%#v", settings)
-		} else if settings.Verbose {
+		} else if settings.Options.Verbose {
 			log.Printf("--settings:%+v", settings)
 		}
 
@@ -241,7 +240,7 @@ func main() {
 						next = true
 					}
 					fallthrough
-				case "debug", "verbose", "version", "stdin", "help":
+				case "debug", "verbose", "testing", "version", "stdin", "help":
 					args = append(args, arg)
 					continue
 				}
@@ -258,14 +257,17 @@ func main() {
 					continue
 				}
 			} else {
-				settings.Templates = append(settings.Templates, arg)
+				settings.Options.Templates = append(settings.Options.Templates, arg)
 				continue
 			}
 
-			settings.Arguments = append(settings.Arguments, arg)
+			settings.Options.Arguments = append(settings.Options.Arguments, arg)
 		}
 	}
 
-	app.Action = renderizer
+	app.Action = func(_ *cli.Context) error {
+		return renderizer.Render(settings.Options)
+	}
+
 	app.Run(args)
 }

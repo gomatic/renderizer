@@ -1,2 +1,5 @@
-Hello, {{ environment "USER" }}!
+# This comes from the environment regardless of user input:
+USER {{ environment "USER" }}
+
+# This can be changed by the caller:
 PWD {{ .env.PWD }}

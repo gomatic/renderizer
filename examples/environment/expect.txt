@@ -1,0 +1,18 @@
+# This comes from the environment regardless of user input:
+USER rnix
+
+# This can be changed by the caller:
+PWD /Users/rnix/go/src/github.com/gomatic/renderizer/examples/environment
+
+# This comes from the environment regardless of user input:
+USER rnix
+
+# This can be changed by the caller:
+PWD /Users/rnix/go/src/github.com/gomatic/renderizer/examples/environment
+
+# This comes from the environment regardless of user input:
+USER rnix
+
+# This can be changed by the caller:
+PWD /Users/rnix/go/src/github.com/gomatic/renderizer/examples/environment
+

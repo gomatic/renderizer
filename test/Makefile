@@ -1,4 +1,4 @@
 .PHONY : test
 
 test:
-	bash test
+	@bash test

@@ -1,0 +1,114 @@
+<html>
+
+
+Yay, foo was defined and has value true!  (Requires --missing=default)
+
+
+<ul>
+    
+    <li>apple</li>
+    
+    <li>banana</li>
+    
+    <li>cherry</li>
+    
+</ul>
+
+</html>
+
+
+<html>
+
+
+Yay, foo was defined and has value true!  (Requires --missing=default)
+
+
+<ul>
+    
+    <li>apple</li>
+    
+    <li>banana</li>
+    
+    <li>cherry</li>
+    
+</ul>
+
+</html>
+
+
+<html>
+
+
+Yay, foo was defined and has value true!  (Requires --missing=default)
+
+
+<ul>
+    
+    <li>apple</li>
+    
+    <li>banana</li>
+    
+    <li>cherry</li>
+    
+</ul>
+
+</html>
+
+
+<html>
+
+
+Yay, foo was defined and has value true!  (Requires --missing=default)
+
+
+<ul>
+    
+    <li>apple</li>
+    
+    <li>banana</li>
+    
+    <li>cherry</li>
+    
+</ul>
+
+</html>
+
+
+<html>
+
+
+Yay, foo was defined and has value true!  (Requires --missing=default)
+
+
+<ul>
+    
+    <li>apple</li>
+    
+    <li>banana</li>
+    
+    <li>cherry</li>
+    
+</ul>
+
+</html>
+
+
+<html>
+
+
+Yay, foo was defined and has value true!  (Requires --missing=default)
+
+
+<ul>
+    
+    <li>apple</li>
+    
+    <li>banana</li>
+    
+    <li>cherry</li>
+    
+</ul>
+
+</html>
+
+

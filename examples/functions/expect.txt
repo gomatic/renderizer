@@ -1,0 +1,162 @@
+line 1 started            = 2006-01-02 15:04:05.987654321 +0000 UTC
+line 2 debugging          = true
+line 3 debugging          = debugging
+line 4 debug_toggle       = false
+line 5 debugging          = 
+line 6 debug              = string message
+line 7 command_line       = testing
+line 8 RENDERIZER_VERSION = renderizer
+line 9 ip_math            = 192.168.0.0
+line 10 ip4_inc           = 192.168.0.0
+line 11 ip4_next          = 192.168.0.0
+line 12 ip4_prev          = 192.168.0.0
+line 13 ip_ints           = [192 168 0 0]
+line 14 ip_ints           = 192.168.0.0
+line 15 TODO              = 0000
+line 16 TODO              = 0000
+line 17 TODO              = 0000
+line 18 TODO              = [0]
+line 19 TODO              = 0000
+line 20 TODO              = { {cidr_next} }
+line 21 ip_ints           = [192 168 0 0]
+line 22 ip_split          = [1111 2222 3333 4444 5555 6666 7777 8888]
+line 23 ip_split          = [4369 8738 13107 17476 21845 26214 30583 34952]
+line 24 ip_split          = [192 168 0 0]
+line 25 ip_split          = [4369 8738 13107 17476 21845 26214 30583 34952]
+line 26 ip_split          = 1111.2222.3333.4444.5555.6666.7777.8888
+line 27 ip_split          = 192.168.0.0
+line 28 ip_split          = 2222
+line 29 ip_split          = 8738
+line 30 iindex            = :
+line 31 split             = [1111:2222:3333:4444:5555:6666:7777:8888]
+line 32 substr            = :2222:
+line 33 replace           = 1111 2222 3333 4444:5555:6666:7777:8888
+line 34 replace_          = 1111 2222 3333 4444:5555:6666:7777:8888
+line 35 trim              = trimmed
+line 36 trim_             = trimmed
+line 37 trim_left         = trimmedxyz
+line 38 trim_left_        = trimmedxyz
+line 39 trim_right        = abctrimmed
+line 40 trim_right_       = abctrimmed
+line 41 keynext A         = 1
+line 42 keynext B         = 1
+line 43 keynext A         = 2
+line 44 inc               = 1 + 5 + 4  = 10
+line 45 add               = 7 + 3      = 10
+line 46 sub               = 13 - 3     = 10
+line 47 mul               = 5 * 2      = 10
+line 48 div               = 20 / 2     = 10
+line 49 mod               = 12345 % 10 = 5
+line 50 rand              = 8717895732742165505
+line 51 lower             = lower
+line 52 upper             = UPPER
+line 53 title             = This Is A Title From Lowercase
+line 54 title             = THIS IS A TITLE FROM UPPERCASE
+line 55 initcap           = This Is Initcap From Lowercase
+line 56 initcap           = This Is Initcap From Uppercase
+line 57 cleanser          = korsw
+line 58 cleanse           = [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+line 59 cleanse           = WORKS
+line 60 cleanse           = WORKS
+line 61 cleanse           = WORKS
+line 62 cleanse           = zaqxswcdevfrbgtnhymjukilop
+
+line 63 dirname           = a/b/c
+line 64 dirname           = /a/b/c
+line 65 dirname           = .
+line 66 dirname           = .
+line 67 basename          = functions
+line 68 basename          = c
+line 69 basename          = c.ext
+line 70 basename          = c
+line 71 basename          = c.ext.xyz.last
+line 72 basename          = c.ext.xyz
+line 73 basename          = c.ext
+line 74 basename          = c
+
+line 75 now               = 2006-01-02 15:04:05.987654321 +0000 UTC
+line 76 pausing 1s        = 2006-01-02 15:04:05.987654321 +0000 UTC
+line 77 now               = 2006-01-02 15:04:05.987654321 +0000 UTC
+line 78 started           = 2006-01-02 15:04:05.987654321 +0000 UTC
+
+line 1 started            = 2006-01-02 15:04:05.987654321 +0000 UTC
+line 2 debugging          = true
+line 3 debugging          = debugging
+line 4 debug_toggle       = false
+line 5 debugging          = 
+line 6 debug              = string message
+line 7 command_line       = testing
+line 8 RENDERIZER_VERSION = renderizer
+line 9 ip_math            = 192.168.0.0
+line 10 ip4_inc           = 192.168.0.0
+line 11 ip4_next          = 192.168.0.0
+line 12 ip4_prev          = 192.168.0.0
+line 13 ip_ints           = [192 168 0 0]
+line 14 ip_ints           = 192.168.0.0
+line 15 TODO              = 0000
+line 16 TODO              = 0000
+line 17 TODO              = 0000
+line 18 TODO              = [0]
+line 19 TODO              = 0000
+line 20 TODO              = { {cidr_next} }
+line 21 ip_ints           = [192 168 0 0]
+line 22 ip_split          = [1111 2222 3333 4444 5555 6666 7777 8888]
+line 23 ip_split          = [4369 8738 13107 17476 21845 26214 30583 34952]
+line 24 ip_split          = [192 168 0 0]
+line 25 ip_split          = [4369 8738 13107 17476 21845 26214 30583 34952]
+line 26 ip_split          = 1111.2222.3333.4444.5555.6666.7777.8888
+line 27 ip_split          = 192.168.0.0
+line 28 ip_split          = 2222
+line 29 ip_split          = 8738
+line 30 iindex            = :
+line 31 split             = [1111:2222:3333:4444:5555:6666:7777:8888]
+line 32 substr            = :2222:
+line 33 replace           = 1111 2222 3333 4444:5555:6666:7777:8888
+line 34 replace_          = 1111 2222 3333 4444:5555:6666:7777:8888
+line 35 trim              = trimmed
+line 36 trim_             = trimmed
+line 37 trim_left         = trimmedxyz
+line 38 trim_left_        = trimmedxyz
+line 39 trim_right        = abctrimmed
+line 40 trim_right_       = abctrimmed
+line 41 keynext A         = 1
+line 42 keynext B         = 1
+line 43 keynext A         = 2
+line 44 inc               = 1 + 5 + 4  = 10
+line 45 add               = 7 + 3      = 10
+line 46 sub               = 13 - 3     = 10
+line 47 mul               = 5 * 2      = 10
+line 48 div               = 20 / 2     = 10
+line 49 mod               = 12345 % 10 = 5
+line 50 rand              = 8717895732742165505
+line 51 lower             = lower
+line 52 upper             = UPPER
+line 53 title             = This Is A Title From Lowercase
+line 54 title             = THIS IS A TITLE FROM UPPERCASE
+line 55 initcap           = This Is Initcap From Lowercase
+line 56 initcap           = This Is Initcap From Uppercase
+line 57 cleanser          = korsw
+line 58 cleanse           = [abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]
+line 59 cleanse           = WORKS
+line 60 cleanse           = WORKS
+line 61 cleanse           = WORKS
+line 62 cleanse           = zaqxswcdevfrbgtnhymjukilop
+
+line 63 dirname           = a/b/c
+line 64 dirname           = /a/b/c
+line 65 dirname           = .
+line 66 dirname           = .
+line 67 basename          = functions
+line 68 basename          = c
+line 69 basename          = c.ext
+line 70 basename          = c
+line 71 basename          = c.ext.xyz.last
+line 72 basename          = c.ext.xyz
+line 73 basename          = c.ext
+line 74 basename          = c
+
+line 75 now               = 2006-01-02 15:04:05.987654321 +0000 UTC
+line 76 pausing 1s        = 2006-01-02 15:04:05.987654321 +0000 UTC
+line 77 now               = 2006-01-02 15:04:05.987654321 +0000 UTC
+line 78 started           = 2006-01-02 15:04:05.987654321 +0000 UTC
+
