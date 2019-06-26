@@ -12,7 +12,7 @@ Supports providing top-level name/value pairs on the command line:
 
 And read from the environment: 
 
-    echo 'Hello, {{.env.User}}' | renderizer
+    echo 'Hello, {{.env.USER}}' | renderizer
 
 ## Usage:
 
