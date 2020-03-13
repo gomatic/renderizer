@@ -8,7 +8,6 @@ require (
 	github.com/gomatic/funcmap v0.0.0-20190110133044-62047470c142
 	github.com/imdario/mergo v0.3.8
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
-	github.com/urfave/cli v1.20.0
 	github.com/urfave/cli/v2 v2.2.0
 	gopkg.in/yaml.v2 v2.2.8
 )
