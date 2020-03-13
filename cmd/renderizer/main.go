@@ -11,7 +11,7 @@ import (
 	"github.com/gomatic/renderizer/pkg/renderizer"
 	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 )
 
@@ -29,14 +29,14 @@ var (
 type Settings struct {
 	Defaulted bool
 	// Configuration yaml
-	ConfigFiles cli.StringSlice
+	ConfigFiles *cli.StringSlice
 	//
 	Options renderizer.Options
 }
 
 //
 var settings = Settings{
-	ConfigFiles: []string{},
+	ConfigFiles: &cli.StringSlice{},
 	Options: renderizer.Options{
 		Config:      map[string]interface{}{},
 		Capitalize:  true,
@@ -57,11 +57,11 @@ func main() {
 	app.Version = appver
 	app.EnableBashCompletion = true
 
-	os.Setenv("RENDERIZER_VERSION", appver)
+	_ = os.Setenv("RENDERIZER_VERSION", appver)
 
 	configs := cli.StringSlice{}
 
-	app.Commands = []cli.Command{
+	app.Commands = []*cli.Command{
 		{
 			Name:  "version",
 			Usage: "Shows the app version",
@@ -73,47 +73,54 @@ func main() {
 	}
 
 	app.Flags = []cli.Flag{
-		cli.StringSliceFlag{
-			Name:   "settings, S, s",
-			Usage:  `load the settings from the provided YAMLs (default: ".renderizer.yaml")`,
-			Value:  &configs,
-			EnvVar: "RENDERIZER",
+		&cli.StringSliceFlag{
+			Name:    "settings",
+			Aliases: []string{"S", "s"},
+			Usage:   `load the settings from the provided YAMLs (default: ".renderizer.yaml")`,
+			Value:   &configs,
+			EnvVars: []string{"RENDERIZER"},
 		},
-		cli.StringFlag{
-			Name:        "missing, M, m",
+		&cli.StringFlag{
+			Name:        "missing",
+			Aliases:     []string{"M", "m"},
 			Usage:       "the 'missingkey' template option (default|zero|error)",
 			Value:       "error",
-			EnvVar:      "RENDERIZER_MISSINGKEY",
+			EnvVars:     []string{"RENDERIZER_MISSINGKEY"},
 			Destination: &settings.Options.MissingKey,
 		},
-		cli.StringFlag{
-			Name:        "environment, env, E, e",
+		&cli.StringFlag{
+			Name:        "environment",
+			Aliases:     []string{"env", "E", "e"},
 			Usage:       "load the environment into the variable name instead of as 'env'",
 			Value:       settings.Options.Environment,
-			EnvVar:      "RENDERIZER_ENVIRONMENT",
+			EnvVars:     []string{"RENDERIZER_ENVIRONMENT"},
 			Destination: &settings.Options.Environment,
 		},
-		cli.BoolFlag{
-			Name:        "stdin, c",
+		&cli.BoolFlag{
+			Name:        "stdin",
+			Aliases:     []string{"c"},
 			Usage:       "read from stdin",
 			Destination: &settings.Options.Stdin,
 		},
-		cli.BoolFlag{
-			Name:        "testing, T",
+		&cli.BoolFlag{
+			Name:        "testing",
+			Aliases:     []string{"T"},
 			Usage:       "configure runtime to provide consistent output",
-			EnvVar:      "RENDERIZER_TESTING",
+			EnvVars:     []string{"RENDERIZER_TESTING"},
 			Destination: &settings.Options.Testing,
 		},
-		cli.BoolFlag{
-			Name:        "debugging, debug, D",
+		&cli.BoolFlag{
+			Name:        "debugging",
+			Aliases:     []string{"debug", "D"},
 			Usage:       "enable debugging server",
-			EnvVar:      "RENDERIZER_DEBUG",
+			EnvVars:     []string{"RENDERIZER_DEBUG"},
 			Destination: &settings.Options.Debugging,
 		},
-		cli.BoolFlag{
-			Name:        "verbose, V",
+		&cli.BoolFlag{
+			Name:        "verbose",
+			Aliases:     []string{"V"},
 			Usage:       "enable verbose output",
-			EnvVar:      "RENDERIZER_VEBOSE",
+			EnvVars:     []string{"RENDERIZER_VEBOSE"},
 			Destination: &settings.Options.Verbose,
 		},
 	}
@@ -124,7 +131,7 @@ func main() {
 
 		settings.Options.Stdin = settings.Options.Stdin || (fi.Mode()&os.ModeCharDevice) == 0
 
-		settings.Options.Arguments = append(settings.Options.Arguments, ctx.Args()...)
+		settings.Options.Arguments = append(settings.Options.Arguments, ctx.Args().Slice()...)
 
 		mainName := ""
 		folderName, err := os.Getwd()
@@ -170,18 +177,18 @@ func main() {
 		switch settings.Options.MissingKey {
 		case "zero", "error", "default", "invalid":
 		default:
-			fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.Options.MissingKey)
+			_, _ = fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.Options.MissingKey)
 			settings.Options.MissingKey = "error"
 		}
 
-		if len(configs) == 0 {
+		if len(configs.Value()) == 0 {
 			settings.Defaulted = true
-			settings.ConfigFiles = []string{"." + mainName + ".yaml"}
+			settings.ConfigFiles = cli.NewStringSlice("." + mainName + ".yaml")
 		} else {
-			settings.ConfigFiles = configs
+			settings.ConfigFiles = &configs
 		}
 
-		for _, config := range settings.ConfigFiles {
+		for _, config := range settings.ConfigFiles.Value() {
 			in, err := ioutil.ReadFile(config)
 			if err != nil {
 				if !settings.Defaulted {
@@ -202,7 +209,7 @@ func main() {
 				} else if settings.Options.Verbose {
 					log.Printf("loaded: %s = %+v", config, loaded)
 				}
-				mergo.Merge(&settings.Options.Config, loaded)
+				_ = mergo.Merge(&settings.Options.Config, loaded)
 			}
 		}
 
@@ -269,5 +276,5 @@ func main() {
 		return renderizer.Render(settings.Options)
 	}
 
-	app.Run(args)
+	_ = app.Run(args)
 }

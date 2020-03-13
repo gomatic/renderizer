@@ -1,6 +1,6 @@
 project_name: renderizer
 builds:
-  - 
+  -
     binary: renderizer
     main: ./cmd/renderizer/main.go
     goos:
@@ -32,11 +32,12 @@ changelog:
       - Merge pull request
       - Merge branch
 
-archive:
-  name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-  replacements:
-    386: i386
-    amd64: x86_64
-  format_overrides:
-    - goos: windows
-      format: zip
+archives:
+  -
+    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    replacements:
+      386: i386
+      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
