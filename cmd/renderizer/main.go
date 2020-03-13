@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	version  = "2.0.5"
-	commit   = "unknown"
+	version  = "2.0.9"
+	commit   = "get"
 	date     = "20060102T150405"
 	selfn, _ = osext.Executable()
 	selfz    = filepath.Base(selfn)
