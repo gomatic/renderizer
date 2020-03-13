@@ -1,5 +1,5 @@
 # This comes from the environment regardless of user input:
-USER {{ environment "USER" }}
+ONLY_ENVIRONMENT {{ environment "ONLY_ENVIRONMENT" }}
 
 # This can be changed by the caller:
-PWD {{ .env.PWD }}
+CAN_OVERRIDE {{ .env.CAN_OVERRIDE }}

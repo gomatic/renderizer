@@ -9,7 +9,10 @@ function expect() {
 		[ -x examples.sh ] || exit ${LINENO}
 		[ -f expect.txt ] || exit ${LINENO}
 
-		diff <(./examples.sh) expect.txt
+		diff <(./examples.sh) expect.txt || {
+			pwd
+			exit 1
+		}
 	)
 }
 

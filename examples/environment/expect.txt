@@ -1,18 +1,18 @@
 # This comes from the environment regardless of user input:
-USER rnix
+ONLY_ENVIRONMENT environment
 
 # This can be changed by the caller:
-PWD /Users/rnix/go/src/github.com/gomatic/renderizer/examples/environment
+CAN_OVERRIDE environment
 
 # This comes from the environment regardless of user input:
-USER rnix
+ONLY_ENVIRONMENT environment
 
 # This can be changed by the caller:
-PWD /Users/rnix/go/src/github.com/gomatic/renderizer/examples/environment
+CAN_OVERRIDE environment
 
 # This comes from the environment regardless of user input:
-USER rnix
+ONLY_ENVIRONMENT environment
 
 # This can be changed by the caller:
-PWD /Users/rnix/go/src/github.com/gomatic/renderizer/examples/environment
+CAN_OVERRIDE command-line
 

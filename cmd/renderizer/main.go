@@ -91,7 +91,7 @@ func main() {
 		&cli.StringFlag{
 			Name:        "environment",
 			Aliases:     []string{"env", "E", "e"},
-			Usage:       "load the environment into the variable name instead of as 'env'",
+			Usage:       fmt.Sprintf("load the environment into the variable name instead of as '%s'", settings.Options.Environment),
 			Value:       settings.Options.Environment,
 			EnvVars:     []string{"RENDERIZER_ENVIRONMENT"},
 			Destination: &settings.Options.Environment,
@@ -241,7 +241,7 @@ func main() {
 					flag = parts[0]
 				}
 				switch flag[2:] {
-				case "settings", "missing":
+				case "settings", "missing", "environment", "env":
 					// If the flag requires a parameter but it is not specified with an =, grab the next argument too.
 					if !strings.Contains(larg, "=") {
 						next = true
