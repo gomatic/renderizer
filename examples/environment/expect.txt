@@ -8,6 +8,12 @@ CAN_OVERRIDE environment
 ONLY_ENVIRONMENT environment
 
 # This can be changed by the caller:
+CAN_OVERRIDE command-line
+
+# This comes from the environment regardless of user input:
+ONLY_ENVIRONMENT environment
+
+# This can be changed by the caller:
 CAN_OVERRIDE environment
 
 # This comes from the environment regardless of user input:
