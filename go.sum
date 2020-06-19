@@ -9,10 +9,8 @@ github.com/gomatic/clock v0.0.0-20180923211445-dd56a80856b5 h1:WQt/fhqphu76xUeXD
 github.com/gomatic/clock v0.0.0-20180923211445-dd56a80856b5/go.mod h1:qMIph1YAd255ac/BLtSwSfcWGQ69BdNuZ/EgkeuQakA=
 github.com/gomatic/clock v1.0.0 h1:xzAfBShN+Ko1S6pYt+HQZv79PcPVkIYG2c2eE4GkW6o=
 github.com/gomatic/clock v1.0.0/go.mod h1:CUAmVUNJnbL+LW+CZ0ei6OV+2reFSe9K70932UX/s3o=
-github.com/gomatic/funcmap v0.0.0-20190110133044-62047470c142 h1:M9x0n/XjQyzgfBSe+WlCyI9ibIYRUNT+Gq3PO999m0s=
-github.com/gomatic/funcmap v0.0.0-20190110133044-62047470c142/go.mod h1:wMnyizMmIaVLKcBTDXxzD6vmjmUQvGrZ53doneF35zo=
-github.com/gomatic/funcmap v1.0.0 h1:bHjMII0zX0qS8hNBwMS0UKaLGRFDyMoNfEn8nhWVNfg=
-github.com/gomatic/funcmap v1.0.0/go.mod h1:z7ybRvcEKZsnKFnryQbI+5rgrD24Wj/QrDMhtkPwNIo=
+github.com/gomatic/funcmap v1.0.1 h1:Mu4vBNhJqhdh1klll9sKi0dfKve8G5zfRnPZ6pEmYVs=
+github.com/gomatic/funcmap v1.0.1/go.mod h1:z7ybRvcEKZsnKFnryQbI+5rgrD24Wj/QrDMhtkPwNIo=
 github.com/imdario/mergo v0.3.8 h1:CGgOkSJeqMRmt0D9XLWExdT4m4F1vd3FV3VPt+0VxkQ=
 github.com/imdario/mergo v0.3.8/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 h1:iQTw/8FWTuc7uiaSepXwyf3o52HaUYcV+Tu66S3F5GA=

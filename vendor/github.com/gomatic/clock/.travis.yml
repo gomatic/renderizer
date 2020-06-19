@@ -1,7 +1,9 @@
 language: go
 go:
+  - "1.11"
+  - "1.12"
+  - "1.13"
   - "1.14"
-  - "1.15"
   - "tip"
 notificaitons:
   email:
@@ -10,6 +12,6 @@ notificaitons:
     on_success: change
     on_failure: always
 install:
-  - go get -t ./pkg/... ./cmd/...
+  - go get -t ./...
 script:
-  - go test -v ./pkg/... ./cmd/...
+  - go test -v
