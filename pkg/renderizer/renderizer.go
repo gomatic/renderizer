@@ -21,44 +21,29 @@ import (
 )
 
 //
-type Options struct {
-	// Capitalization is a positional toggles. The following variable names are capitalized (title-case).
-	Capitalize bool
-	// Set the Missing Key template option. Defaults to "error".
-	MissingKey string
-	//
-	Config map[string]interface{}
-	//
-	Arguments []string
-	//
-	Templates []string
-	// Add the environment map to the variables.
-	Environment string
-	//
-	TimeFormat string
-	//
-	Stdin bool
-	//
-	Debugging bool
-	//
-	Verbose bool
-	//
-	Testing bool
-}
-
-//
 type Renderizer interface {
 	Render() error
 }
 
 //
-func New(settings Options) Renderizer {
-	return &settings
-}
+func New(options ...Option) Renderizer {
+	settings := Options{
+		Config:      map[string]interface{}{},
+		Capitalize:  true,
+		MissingKey:  "error",
+		TimeFormat:  "20060102T150405",
+		Environment: "env",
+		Arguments:   []string{},
+		Templates:   []string{},
+	}
 
-//
-func Render(settings Options) error {
-	return settings.Render()
+	for _, opt := range options {
+		if opt != nil {
+			opt(&settings)
+		}
+	}
+
+	return &settings
 }
 
 //
@@ -170,6 +155,9 @@ func (settings *Options) Render() error {
 
 	status := 0
 	for _, file := range files {
+		if settings.Verbose {
+			log.Printf("file: %+v", file)
+		}
 		status |= func() (status int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -191,30 +179,20 @@ func (settings *Options) Render() error {
 				}
 				defer r.Close()
 			}
-			f, err := ioutil.ReadAll(r)
-			if err != nil {
-				log.Println(err)
-				return 2
+			vs := Values{}
+			for k, v := range globalContext {
+				vs[k] = Value{Value: v}
 			}
-			data = f
-
-			tmpl, err := template.New(file).
-				Option(fmt.Sprintf("missingkey=%s", settings.MissingKey)).
-				Funcs(funcmap.Map).
-				Parse(string(data))
+			data, err = Renderer(Context{
+				Name:       file,
+				Functions:  funcmap.Map,
+				MissingKey: settings.MissingKey,
+				Values:     vs,
+			}, r)
 			if err != nil {
-				log.Print(err)
-				return 4
+				log.Printf("%s: %s", file, err)
+				return 1
 			}
-
-			var b bytes.Buffer
-			err = tmpl.Execute(&b, globalContext)
-			if err != nil {
-				log.Print(err)
-				return 8
-			}
-
-			data = b.Bytes()
 			fmt.Println(string(data))
 
 			return 0
@@ -223,6 +201,62 @@ func (settings *Options) Render() error {
 
 	os.Exit(status)
 	return nil
+}
+
+//
+type Value struct {
+	TitleCase bool
+	Name      string
+	Value     interface{}
+}
+
+//
+type Values map[string]Value
+
+//
+func (v Values) Map() (m map[string]interface{}) {
+	m = map[string]interface{}{}
+	for k, v := range v {
+		m[k] = v.Value
+	}
+	return m
+}
+
+type Context struct {
+	Name       string
+	MissingKey string
+	Functions  template.FuncMap
+	Values     Values
+}
+
+//
+func Renderer(c Context, r io.Reader) ([]byte, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.Functions == nil {
+		c.Functions = funcmap.Map
+	}
+	if c.MissingKey == "" {
+		c.MissingKey = "error"
+	}
+	tmpl, err := template.New(c.Name).
+		Option(fmt.Sprintf("missingkey=%s", c.MissingKey)).
+		Funcs(c.Functions).
+		Parse(string(data))
+	if err != nil {
+		return nil, err
+	}
+
+	var b bytes.Buffer
+	err = tmpl.Execute(&b, c.Values.Map())
+	if err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
 }
 
 // Transform a string into the best type.

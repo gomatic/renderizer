@@ -1,0 +1,48 @@
+# Generated: 2006-01-02T15:04:05UTC
+#      With: testing
+apiVersion: v1
+kind: Pod
+metadata:
+  name: renderizer
+  namespace: gomatic-master
+  labels:
+    app: &app_name gomatic
+spec:
+  containers: 
+    - name: &name_0 one
+      image: registry.gomatic.systems/gomatic-one
+      ports:
+        - name: *name_0
+          containerPort: 101
+          protocol: TCP
+    - name: &name_1 two
+      image: registry.gomatic.systems/gomatic-two
+      ports:
+        - name: *name_1
+          containerPort: 102
+          protocol: TCP
+
+# Generated: 2006-01-02T15:04:05UTC
+#      With: testing
+apiVersion: v1
+kind: Pod
+metadata:
+  name: renderizer
+  namespace: gomatic-master
+  labels:
+    app: &app_name gomatic
+spec:
+  containers: 
+    - name: &name_0 one
+      image: registry.gomatic.systems/gomatic-one
+      ports:
+        - name: *name_0
+          containerPort: 101
+          protocol: TCP
+    - name: &name_1 two
+      image: registry.gomatic.systems/gomatic-two
+      ports:
+        - name: *name_1
+          containerPort: 102
+          protocol: TCP
+

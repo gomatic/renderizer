@@ -5,26 +5,6 @@ import (
 	"testing"
 )
 
-func TestNew(t *testing.T) {
-	type args struct {
-		settings Options
-	}
-	tests := []struct {
-		name string
-		args args
-		want Renderizer
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.settings); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestRender(t *testing.T) {
 	type args struct {
 		settings Options
@@ -38,7 +18,7 @@ func TestRender(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Render(tt.args.settings); (err != nil) != tt.wantErr {
+			if err := Renderizer(&tt.args.settings).Render(); (err != nil) != tt.wantErr {
 				t.Errorf("Render() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
