@@ -1,15 +1,3 @@
-*
-
-!.gitignore
-!Makefile
-!*.go
-!*.yaml
-!*.yml
-!*.tmpl
-!*.md
-!*/
-!test/*.tpl
-!test/*.sh
-
+.idea/
 build/
 release/

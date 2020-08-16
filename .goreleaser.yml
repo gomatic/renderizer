@@ -9,17 +9,21 @@ builds:
       - linux
     goarch:
       - amd64
-    ldflags: '-s -w -X main.version={{.Version}} -X main.tag={{.Tag}} -X main.commit={{.Commit}} -X main.date={{ time "20060102" }}'
+    ldflags: '-s -w -X main.version={{.Version}} -X main.tag={{.Tag}} -X main.commitHash={{.FullCommit}} -X main.commitTime={{ index .Env "COMMIT_TIME" }} -X main.buildTime={{ time "20060102T150405" }}'
 
-dist: release/dist
+dist: build/dist
+
+snapshot:
+  name_template: '{{.Version}}.snapshot'
 
 release:
   github:
     owner: gomatic
     name: renderizer
 
-sign:
-  artifacts: all
+signs:
+  -
+    artifacts: all
 
 checksum:
   name_template: '{{ .ProjectName }}_checksums.txt'

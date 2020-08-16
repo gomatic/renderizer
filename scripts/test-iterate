@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+export RENDERIZER_TESTING=true
+
+find ${@:-test examples} -name 'expect.sh' -print0 \
+| xargs -n1 -0 dirname \
+| tr '\n' '\0' \
+| xargs -n1 -0 -IDIR "${ROOT}/scripts/test-expect" 'DIR'
+
+echo success

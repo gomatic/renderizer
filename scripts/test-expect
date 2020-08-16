@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+
+cd "${1}" || exit ${LINENO}
+[ -x expect.sh ] || exit ${LINENO}
+[ -f expect.txt ] || exit ${LINENO}
+
+ROOT="$(git rev-parse --show-toplevel)"
+REL="${PWD#${ROOT}/}"
+
+echo >&2 "testing: ${REL}"
+
+export RENDERIZER_TESTING=true
+
+GOOS=$(go env GOOS)
+GOARCH=$(go env GOARCH)
+DIST="${ROOT}/build/dist/renderizer_${GOOS}_${GOARCH}"
+BINARY="${DIST}/renderizer"
+[[ -x "${BINARY}" ]] || {
+  echo >&2 "missing: ${BINARY#${ROOT}/}"
+  exit 1
+}
+
+export PATH="${DIST}":"${PATH}"
+
+./expect.sh | diff -u - expect.txt || {
+  echo "failed: ${REL} : $(renderizer --version)"
+  exit 1
+} >&2
+
+exit 0
