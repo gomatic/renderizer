@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gomatic/renderizer/pkg/renderizer"
+	"github.com/gomatic/renderizer/pkg/v1/renderizer"
 	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
 	"github.com/urfave/cli/v2"
