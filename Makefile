@@ -7,9 +7,11 @@ SOURCES = $(wildcard *.go)
 .PHONY : $(SOURCES)
 .PHONY : all release build vet test
 .PHONY : help
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := ci
 
 PREFIX ?= usr/local
+
+ci: env vet test
 
 all: release vet test ## Make everything
 
@@ -20,8 +22,11 @@ release: ## Build releases
 	goreleaser --rm-dist --skip-publish --skip-validate
 	scripts/rename-release
 
-vet test: build ## Run tests or vet
-	go $@ ./...
+env:
+	go env
+
+vet test: ## Run tests or vet
+	go $@ -mod=vendor ./...
 
 
 help: ## This help.

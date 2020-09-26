@@ -1,0 +1,9 @@
+*
+
+!.gitignore
+!.travis.yml
+!LICENSE
+!*.md
+!*.go
+!*.mod
+!*.sum
