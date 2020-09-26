@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"os"
 	"reflect"
 	"strconv"
@@ -14,7 +13,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/gomatic/clock"
 	"github.com/gomatic/funcmap"
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
@@ -48,12 +46,6 @@ func New(options ...Option) Renderizer {
 
 //
 func (settings *Options) Render() error {
-
-	if settings.Testing {
-		rand.Seed(0)
-		funcmap.UseClock(clock.Format)
-		funcmap.Map["command_line"] = func() string { return "testing" }
-	}
 
 	globalContext := map[string]interface{}{}
 
@@ -185,7 +177,7 @@ func (settings *Options) Render() error {
 			}
 			data, err = Renderer(Context{
 				Name:       file,
-				Functions:  funcmap.Map,
+				Functions:  funcmap.New(funcmap.WithV2Map()),
 				MissingKey: settings.MissingKey,
 				Values:     vs,
 			}, r)
@@ -237,7 +229,7 @@ func Renderer(c Context, r io.Reader) ([]byte, error) {
 	}
 
 	if c.Functions == nil {
-		c.Functions = funcmap.Map
+		c.Functions = funcmap.New(funcmap.WithV2Map())
 	}
 	if c.MissingKey == "" {
 		c.MissingKey = "error"

@@ -9,7 +9,3 @@ notificaitons:
       gomatic@nicerobot.org
     on_success: change
     on_failure: always
-script:
-  - go env
-  - go vet -mod=vendor ./...
-  - go test -mod=vendor -v ./...

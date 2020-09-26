@@ -6,6 +6,4 @@ jobs:
     working_directory: /go/src/github.com/gomatic/renderizer
     steps:
       - checkout
-      - run: go env
-      - run: go vet -mod=vendor ./...
-      - run: go test -mod=vendor ./...
+      - run: make env vet test

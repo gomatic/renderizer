@@ -23,8 +23,9 @@ MAIN_SOURCES = $(filter-out %_test.go, $(ALL_SOURCES))
 TEST_SOURCES = $(filter %_test.go, $(ALL_SOURCES))
 
 #
+ci: env vet test
 
-build snapshot: vet test $(BINARY) # Build snapshot
+build snapshot: env vet test $(BINARY) # Build snapshot
 
 all: release ## Make everything
 
@@ -39,6 +40,9 @@ full-release: tag
 
 tag:
 	git tag -f -m $(TAG) $(TAG)
+
+env:
+	go env
 
 vet test: ## Run tests or vet
 	go $@ ./...

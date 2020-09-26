@@ -1,3 +1,9 @@
+# github.com/Masterminds/goutils v1.1.0
+github.com/Masterminds/goutils
+# github.com/Masterminds/semver v1.5.0
+github.com/Masterminds/semver
+# github.com/Masterminds/sprig v2.22.0+incompatible
+github.com/Masterminds/sprig
 # github.com/cpuguy83/go-md2man/v2 v2.0.0
 ## explicit
 github.com/cpuguy83/go-md2man/v2/md2man
@@ -6,10 +12,14 @@ github.com/davecgh/go-spew/spew
 # github.com/gomatic/clock v1.0.0
 ## explicit
 github.com/gomatic/clock
-# github.com/gomatic/funcmap v1.0.1
+# github.com/gomatic/funcmap v1.1.0
 ## explicit
 github.com/gomatic/funcmap
-# github.com/imdario/mergo v0.3.8
+# github.com/google/uuid v1.1.2
+github.com/google/uuid
+# github.com/huandu/xstrings v1.3.2
+github.com/huandu/xstrings
+# github.com/imdario/mergo v0.3.11
 ## explicit
 github.com/imdario/mergo
 # github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
@@ -17,6 +27,10 @@ github.com/imdario/mergo
 github.com/kardianos/osext
 # github.com/konsorten/go-windows-terminal-sequences v1.0.3
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/mitchellh/copystructure v1.0.0
+github.com/mitchellh/copystructure
+# github.com/mitchellh/reflectwalk v1.0.0
+github.com/mitchellh/reflectwalk
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/russross/blackfriday/v2 v2.0.1
@@ -32,8 +46,11 @@ github.com/stretchr/testify/assert
 # github.com/urfave/cli/v2 v2.2.0
 ## explicit
 github.com/urfave/cli/v2
+# golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+golang.org/x/crypto/pbkdf2
+golang.org/x/crypto/scrypt
 # golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
 golang.org/x/sys/unix
-# gopkg.in/yaml.v2 v2.2.8
+# gopkg.in/yaml.v2 v2.3.0
 ## explicit
 gopkg.in/yaml.v2

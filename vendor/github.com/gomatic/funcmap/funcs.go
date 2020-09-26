@@ -13,117 +13,218 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/Masterminds/sprig"
 	"github.com/gomatic/clock"
 )
 
-//
-var Map = template.FuncMap{
-	"debug":        debug,
-	"debugging":    debugging,
-	"debug_toggle": debug_toggle,
-	"pause":        pause,
-	"command_line": commandLine,
-	"ip_math":      ip_math,
-	"ip4_inc":      ip4_inc,
-	"ip4_next":     ip4_next,
-	"ip4_prev":     ip4_prev,
-	"ip4_add":      ip4_add,
-	"ip4_join":     ip4_join,
-	"ip6_inc":      ip6_inc,
-	"ip6_next":     ip6_next,
-	"ip6_prev":     ip6_prev,
-	"ip6_add":      ip6_add,
-	"ip6_join":     ip6_join,
-	"cidr_next":    cidr_next,
-	"ip_ints":      ip_ints,
-	"ip_split":     ip_split,
-	"to_int":       to_int,
-	"dec_to_int":   dec_to_int,
-	"hex_to_int":   hex_to_int,
-	"from_int":     from_int,
-	"next":         next,
-	"keynext":      keynext,
-	"inc":          step,
-	"add":          add,
-	"sub":          sub,
-	"mul":          mul,
-	"div":          div,
-	"mod":          mod,
-	"rand":         func() int64 { return rand.Int63() },
-	"identifier":   cleanse(`^[^[:alpha:]_]+|[^[:alnum:]_]`),
-	"cleanse":      cleanse(`[^[:alpha:]]`),
-	"cleanser":     cleanser,
-	"environment":  environment,
-	"now":          privateTime.Now,
-	"started":      started(),
-	"iindex":       index,
-	"split":        split,
-	"join":         join,
-	"substr":       substr,
-	"lower":        strings.ToLower,
-	"replace":      strings.Replace,
-	"replace_":     func(n int, old, new, s string) string { return strings.Replace(s, old, new, n) },
-	"title":        strings.Title,
-	"initcap":      func(s string) string { return strings.Title(strings.ToLower(s)) },
-	"trim":         strings.Trim,
-	"trim_":        func(cut, s string) string { return strings.Trim(s, cut) },
-	"trim_left":    strings.TrimLeft,
-	"trim_left_":   func(cut, s string) string { return strings.TrimLeft(s, cut) },
-	"trim_right":   strings.TrimRight,
-	"trim_right_":  func(cut, s string) string { return strings.TrimRight(s, cut) },
-	"upper":        strings.ToUpper,
-	"basename":     basename,
-	"dirname":      filepath.Dir,
-	"ext":          filepath.Ext,
-}
-
-type privateClock struct {
-	tf   clock.TimeFunction
-	lock sync.RWMutex
-}
-
-var privateTime = privateClock{
-	tf:   time.Now,
-	lock: sync.RWMutex{},
-}
-
-func (t privateClock) Now() time.Time {
-	t.lock.RLock()
-	defer t.lock.RUnlock()
-	return t.tf()
+type opt struct {
+	maps               []template.FuncMap
+	rightmostOverrides bool
+	timeFunc           clock.TimeFunction
 }
 
 //
-func UseClock(c clock.Clock) {
-	UseTime(c.UTC())
+type Optional func(*opt)
+
+//
+func WithMaps(fs ...template.FuncMap) Optional {
+	return func(o *opt) {
+		if len(fs) == 0 {
+			return
+		}
+		o.maps = append(o.maps, fs...)
+	}
 }
 
 //
-func UseTime(t clock.TimeFunction) {
-	privateTime.lock.Lock()
-	defer privateTime.lock.Unlock()
-	Map["now"] = t
-	Map["started"] = t
-	privateTime.tf = t
+func WithMap(fs template.FuncMap) Optional {
+	return WithMaps(fs)
 }
+
+//
+func WithRightmostOverrides() Optional {
+	return func(o *opt) {
+		o.rightmostOverrides = true
+	}
+}
+
+//
+func WithV1Map() Optional {
+	return WithMaps(v1Map)
+}
+
+//
+func WithV2Map() Optional {
+	return WithMaps(v1Map, sprig.GenericFuncMap())
+}
+
+//
+func WithV3Map() Optional {
+	return WithMaps(sprig.GenericFuncMap(), v1Map)
+}
+
+//
+func WithClock(timeFunc clock.TimeFunction) Optional {
+	return func(o *opt) {
+		if timeFunc == nil {
+			return
+		}
+		o.timeFunc = timeFunc
+	}
+}
+
+//
+func New(options ...Optional) template.FuncMap {
+	opts := opt{
+		maps: []template.FuncMap{},
+	}
+	for _, f := range options {
+		if f == nil {
+			continue
+		}
+		f(&opts)
+	}
+
+	fm := template.FuncMap{}
+	for _, fs := range opts.maps {
+		for k, f := range fs {
+			if f == nil {
+				continue
+			}
+			_, exists := fm[k]
+			if opts.rightmostOverrides || !exists {
+				fm[k] = f
+			}
+		}
+	}
+
+	if opts.timeFunc != nil {
+		fm["now"] = opts.timeFunc
+	}
+
+	return fm
+}
+
+//
+func init() {
+
+	keySequencer := KeySequencer()
+	v1Map = template.FuncMap{
+		"debug":        Debug,
+		"debugging":    debugging,
+		"debug_toggle": debugToggle,
+		"debugToggle":  debugToggle,
+		"pause":        Pause,
+		"command_line": CommandLine,
+		"commandLine":  CommandLine,
+		"ip_math":      IPMath,
+		"IPMath":       IPMath,
+		"ip4_inc":      IP4Inc,
+		"IP4Inc":       IP4Inc,
+		"ip4_next":     IP4Next,
+		"IP4Next":      IP4Next,
+		"ip4_prev":     IP4Prev,
+		"IP4Prev":      IP4Prev,
+		"ip4_add":      IP4Add,
+		"IP4Add":       IP4Add,
+		"ip4_join":     IP4Join,
+		"IP4Join":      IP4Join,
+		"ip6_inc":      IP6Inc,
+		"IP6Inc":       IP6Inc,
+		"ip6_next":     IP6Next,
+		"IP6Next":      IP6Next,
+		"ip6_prev":     IP6Prev,
+		"IP6Prev":      IP6Prev,
+		"ip6_add":      IP6Add,
+		"IP6Add":       IP6Add,
+		"ip6_join":     IP6Join,
+		"IP6Join":      IP6Join,
+		"cidr_next":    CIDRNext,
+		"CIDRNext":     CIDRNext,
+		"ip_ints":      IPInts,
+		"IPInts":       IPInts,
+		"ip_split":     IPSplit,
+		"IPSplit":      IPSplit,
+		"to_int":       ToInt,
+		"ToInt":        ToInt,
+		"dec_to_int":   DecToInt,
+		"DecToInt":     DecToInt,
+		"hex_to_int":   HexToInt,
+		"HexToInt":     HexToInt,
+		"from_int":     FromInt,
+		"FromInt":      FromInt,
+		"next":         Sequencer(),
+		"keynext":      keySequencer,
+		"keyNext":      keySequencer,
+		"inc":          Step,
+		"add":          Add,
+		"sub":          Sub,
+		"mul":          Mul,
+		"div":          SafeDiv,
+		"div_":         Div,
+		"mod":          Mod,
+		"rand":         Rand,
+		"identifier":   Cleanse(`^[^[:alpha:]_]+|[^[:alnum:]_]`),
+		"cleanse":      Cleanse(`[^[:alpha:]]`),
+		"cleanser":     Cleanser,
+		"environment":  Environment,
+		"env":          Environment,
+		"now":          time.Now,
+		"started":      Starter,
+		"iindex":       Index,
+		"split":        Split,
+		"join":         Join,
+		"substr":       Substr,
+		"lower":        strings.ToLower,
+		"toLower":      strings.ToLower,
+		"replace":      strings.Replace,
+		"replace_":     ReReplace,
+		"title":        strings.Title,
+		"initcap":      ReInitcap,
+		"trim":         strings.Trim,
+		"trim_":        ReTrim,
+		"trim_left":    strings.TrimLeft,
+		"trimLeft":     strings.TrimLeft,
+		"trim_left_":   ReTrimLeft,
+		"trimLeft_":    ReTrimLeft,
+		"trim_right":   strings.TrimRight,
+		"trimRight":    strings.TrimRight,
+		"trim_right_":  ReTrimRight,
+		"trimRight_":   ReTrimRight,
+		"upper":        strings.ToUpper,
+		"toUpper":      strings.ToUpper,
+		"basename":     Basename,
+		"dirname":      filepath.Dir,
+		"ext":          filepath.Ext,
+	}
+
+	for k, f := range v1Map {
+		Map[k] = f
+	}
+}
+
+var Map = template.FuncMap{}
+
+//
+var v1Map template.FuncMap
 
 // To report a consistent time through a single template.
-var started = func() func() time.Time {
-	started := privateTime.Now()
-	return func() time.Time { return started }
+func Starter() func() time.Time {
+	started := clock.Now("")
+	return func() time.Time { return started() }
 }
 
 //
-func debug(any ...interface{}) string {
+func Debug(any ...interface{}) string {
 	s := make([]string, len(any))
 	for i, a := range any {
 		s[i] = fmt.Sprintf("%[1]T %[1]v", a)
 	}
-	return join(" ", s)
+	return Join(" ", s)
 }
 
 // toggle debugging
-var debugging, debug_toggle = func() (func() bool, func() bool) {
+func Debugger() (func() bool, func() bool) {
 	lock := sync.RWMutex{}
 	_debugging := false
 	get := func() bool {
@@ -138,25 +239,35 @@ var debugging, debug_toggle = func() (func() bool, func() bool) {
 		return _debugging
 	}
 	return get, toggle
-}()
-
-//
-func pause(t int64) time.Time {
-	paused := privateTime.tf()
-	time.Sleep(time.Duration(t) * time.Millisecond)
-	return paused
 }
 
+// toggle debugging
+var debugging, debugToggle = Debugger()
+
+//
+func Pause(t int64) time.Time {
+	time.Sleep(time.Duration(t) * time.Millisecond)
+	return time.Now()
+}
+
+//
+func ReReplace(n int, old, new, s string) string { return strings.Replace(s, old, new, n) }
+func ReInitcap(s string) string                  { return strings.Title(strings.ToLower(s)) }
+func ReTrim(cut, s string) string                { return strings.Trim(s, cut) }
+func ReTrimLeft(cut, s string) string            { return strings.TrimLeft(s, cut) }
+func ReTrimRight(cut, s string) string           { return strings.TrimRight(s, cut) }
+func Rand() int64                                { return rand.Int63() }
+
 // simple sequence generation.
-var next = func() func() int64 {
+func Sequencer() func() int64 {
 	i := int64(0)
 	return func() int64 {
 		return atomic.AddInt64(&i, 1)
 	}
-}()
+}
 
 // key-based sequencing.
-var keynext = func() func(string) int64 {
+func KeySequencer() func(string) int64 {
 	lock := sync.RWMutex{}
 	is := map[string]*int64{}
 	return func(k string) int64 {
@@ -168,10 +279,10 @@ var keynext = func() func(string) int64 {
 		}
 		return atomic.AddInt64(is[k], 1)
 	}
-}()
+}
 
 //
-func step(a int64, is ...int) int64 {
+func Step(a int64, is ...int) int64 {
 	if len(is) == 0 {
 		is = []int{1}
 	}
@@ -181,17 +292,25 @@ func step(a int64, is ...int) int64 {
 	return a
 }
 
-func add(a, b int64) int64 { return b + a }
+// `b` + `a`
+func Add(a, b int64) int64 { return b + a }
 
-// Subtract `a` from `b`
-func sub(a, b int64) int64 { return b - a }
-func mul(a, b int64) int64 { return b * a }
+// `b` - `a`
+func Sub(a, b int64) int64 { return b - a }
+
+// `b` * `a`
+func Mul(a, b int64) int64 { return b * a }
 
 // `b` modulo `a`
-func mod(a, b int64) int64 { return b % a }
+func Mod(a, b int64) int64 { return b % a }
+
+// `b` / `a`
+func Div(a, b int64) int64 {
+	return b / a
+}
 
 // `b` divided by `a`. Returns `0` if `a == 0`.
-func div(a, b int64) int64 {
+func SafeDiv(a, b int64) int64 {
 	if a == 0 {
 		return 0
 	}
@@ -199,41 +318,43 @@ func div(a, b int64) int64 {
 }
 
 //
-func cleanser(r, s string) string {
+func Cleanser(r, s string) string {
 	return regexp.MustCompile(r).ReplaceAllString(s, "")
 }
 
 //
-func cleanse(r string) func(string) string {
+func Cleanse(r string) func(string) string {
 	re := regexp.MustCompile(r)
 	return func(s string) string {
 		return re.ReplaceAllString(s, "")
 	}
 }
 
-func parseInt(base int) func(s string) (int64, error) {
+//
+func IntParser(base int) func(s string) (int64, error) {
 	return func(s string) (int64, error) {
 		return strconv.ParseInt(s, base, 64)
 	}
 }
 
 //
-func environment(n string) string {
+func Environment(n string) string {
 	v, _ := os.LookupEnv(n)
 	return v
 }
 
 var (
-	parseDec = parseInt(10)
-	parseHex = parseInt(16)
+	parseDec = IntParser(10)
+	parseHex = IntParser(16)
 )
 
 // TODO increment CIDR
-func cidr_next(cidr uint8, lowest, count, inc int8, addr []int64) []int64 {
+func CIDRNext(cidr uint8, lowest, count, inc int8, addr []int64) []int64 {
 	return addr
 }
 
-func ip_calc(bits int32, lowest, count, inc, value int64) int64 {
+//
+func IPCalc(bits int32, lowest, count, inc, value int64) int64 {
 	if value < lowest {
 		value += int64(bits)
 	}
@@ -242,66 +363,66 @@ func ip_calc(bits int32, lowest, count, inc, value int64) int64 {
 
 // Given a zero-based, left-to-right IP group index, lowest value, count, and increment,
 // increment the group, cyclically.
-func ip_add(bits int32, group uint8, lowest, count uint16, inc int16, addr []int64) []int64 {
+func IPAdd(bits int32, group uint8, lowest, count uint16, inc int16, addr []int64) []int64 {
 	if group >= uint8(len(addr)) {
 		return addr
 	}
 	if lowest == 0 && count == 0 {
 		addr[group] = (addr[group] + int64(inc)) % int64(bits)
 	} else {
-		addr[group] = ip_calc(int32(bits), int64(lowest), int64(count), int64(inc), addr[group])
+		addr[group] = IPCalc(int32(bits), int64(lowest), int64(count), int64(inc), addr[group])
 	}
 	return addr
 }
 
 //
-func ip4_inc(group uint8, inc int8, addr string) string {
-	return ip4_join(ip4_add(group, 0, 0, inc, ip_ints(addr)))
+func IP4Inc(group uint8, inc int8, addr string) string {
+	return IP4Join(IP4Add(group, 0, 0, inc, IPInts(addr)))
 }
 
 //
-func ip4_next(group uint8, lowest, count uint8, addr string) string {
-	return ip4_join(ip4_add(group, lowest, count, 1, ip_ints(addr)))
+func IP4Next(group uint8, lowest, count uint8, addr string) string {
+	return IP4Join(IP4Add(group, lowest, count, 1, IPInts(addr)))
 }
 
 //
-func ip4_prev(group uint8, lowest, count uint8, addr string) string {
-	return ip4_join(ip4_add(group, lowest, count, -1, ip_ints(addr)))
+func IP4Prev(group uint8, lowest, count uint8, addr string) string {
+	return IP4Join(IP4Add(group, lowest, count, -1, IPInts(addr)))
 }
 
 // Given a zero-based, left-to-right IP group index, lowest value, count, and increment,
 // increment the group, cyclically.
-func ip4_add(group uint8, lowest, count uint8, inc int8, addr []int64) []int64 {
-	return ip_add(int32(256), group, uint16(lowest), uint16(count), int16(inc), addr)
+func IP4Add(group uint8, lowest, count uint8, inc int8, addr []int64) []int64 {
+	return IPAdd(int32(256), group, uint16(lowest), uint16(count), int16(inc), addr)
 }
 
 //
-func ip6_inc(group uint8, inc int16, addr string) string {
-	return ip6_join(ip6_add(group, 0, 0, inc, ip_ints(addr)))
+func IP6Inc(group uint8, inc int16, addr string) string {
+	return IP6Join(IP6Add(group, 0, 0, inc, IPInts(addr)))
 }
 
 //
-func ip6_next(group uint8, lowest, count uint16, addr string) string {
-	return ip6_join(ip6_add(group, lowest, count, 1, ip_ints(addr)))
+func IP6Next(group uint8, lowest, count uint16, addr string) string {
+	return IP6Join(IP6Add(group, lowest, count, 1, IPInts(addr)))
 }
 
 //
-func ip6_prev(group uint8, lowest, count uint16, addr string) string {
-	return ip6_join(ip6_add(group, lowest, count, -1, ip_ints(addr)))
+func IP6Prev(group uint8, lowest, count uint16, addr string) string {
+	return IP6Join(IP6Add(group, lowest, count, -1, IPInts(addr)))
 }
 
 // given a group, lowest, count, and increment, increment the group, circling around
-func ip6_add(group uint8, lowest, count uint16, inc int16, addr []int64) []int64 {
-	return ip_add(int32(65536), group, lowest, count, inc, addr)
+func IP6Add(group uint8, lowest, count uint16, inc int16, addr []int64) []int64 {
+	return IPAdd(int32(65536), group, lowest, count, inc, addr)
 }
 
 //
-func join(sep string, arr []string) (s string) {
+func Join(sep string, arr []string) (s string) {
 	return strings.Join(arr, sep)
 }
 
 //
-func substr(start, end int, s string) string {
+func Substr(start, end int, s string) string {
 	l := len(s)
 	if l == 0 {
 		return s
@@ -325,12 +446,13 @@ func substr(start, end int, s string) string {
 }
 
 //
-func split(sep, s string) []string {
+func Split(sep, s string) []string {
+	//
 	return strings.Split(s, sep)
 }
 
 //
-func index(i int, a interface{}) interface{} {
+func Index(i int, a interface{}) interface{} {
 	if a == nil {
 		return nil
 	}
@@ -355,47 +477,47 @@ func index(i int, a interface{}) interface{} {
 }
 
 //
-func ip_split(addr string) []string {
-	ip_groups := split(".", addr)
+func IPSplit(addr string) []string {
+	ip_groups := Split(".", addr)
 	if len(ip_groups) > 1 {
 		return ip_groups
 	}
-	return split(":", addr)
+	return Split(":", addr)
 }
 
 //
-func ip4_join(addr []int64) string {
-	return join(".", from_int("%d", addr))
+func IP4Join(addr []int64) string {
+	return Join(".", FromInt("%d", addr))
 }
 
 //
-func ip6_join(addr []int64) string {
-	return join(":", from_int("%04x", addr))
+func IP6Join(addr []int64) string {
+	return Join(":", FromInt("%04x", addr))
 }
 
 //
-func ip_ints(addr string) []int64 {
-	if ip_groups := split(".", addr); len(ip_groups) > 1 {
-		return dec_to_int(ip_groups)
+func IPInts(addr string) []int64 {
+	if ip_groups := Split(".", addr); len(ip_groups) > 1 {
+		return DecToInt(ip_groups)
 	} else {
-		return hex_to_int(strings.Split(":", addr))
+		return HexToInt(strings.Split(":", addr))
 	}
 }
 
 //
-func dec_to_int(arr []string) []int64 {
-	return to_int(10, arr)
+func DecToInt(arr []string) []int64 {
+	return ToInt(10, arr)
 }
 
 //
-func hex_to_int(arr []string) []int64 {
-	return to_int(16, arr)
+func HexToInt(arr []string) []int64 {
+	return ToInt(16, arr)
 }
 
 //
-func to_int(base int, arr []string) []int64 {
+func ToInt(base int, arr []string) []int64 {
 	is := make([]int64, len(arr))
-	parser := parseInt(base)
+	parser := IntParser(base)
 	for i, m := range arr {
 		p, err := parser(m)
 		if err != nil {
@@ -407,7 +529,7 @@ func to_int(base int, arr []string) []int64 {
 }
 
 //
-func from_int(format string, arr []int64) []string {
+func FromInt(format string, arr []int64) []string {
 	ss := make([]string, len(arr))
 	for i, m := range arr {
 		ss[i] = fmt.Sprintf(format, m)
@@ -417,16 +539,16 @@ func from_int(format string, arr []int64) []string {
 
 // Performs IP math using a simple sequence of operations.
 // e.g. _.[+2]._.[+1,%10]
-func ip_math(math, addr string) string {
+func IPMath(math, addr string) string {
 	sep, format, width := ".", "%d", uint(256)
-	ip_groups := split(sep, addr)
-	th_groups := split(sep, math)
+	ip_groups := Split(sep, addr)
+	th_groups := Split(sep, math)
 	parser := parseDec
 	if len(ip_groups) == 1 {
 		parser = parseHex
 		sep, format, width = ":", "%04x", uint(65536)
-		ip_groups = split(sep, addr)
-		th_groups = split(sep, math)
+		ip_groups = Split(sep, addr)
+		th_groups = Split(sep, math)
 	}
 	if len(ip_groups) != len(th_groups) {
 		return addr
@@ -493,11 +615,11 @@ func ip_math(math, addr string) string {
 		}
 		ip_groups[i] = fmt.Sprintf(format, uint(p)%width)
 	}
-	return join(sep, ip_groups)
+	return Join(sep, ip_groups)
 }
 
 // Reproduce a command line string that reflects a usable command line.
-func commandLine() string {
+func CommandLine() string {
 
 	quoter := func(e string) string {
 		if !strings.Contains(e, " ") {
@@ -522,7 +644,8 @@ func commandLine() string {
 	return filepath.Base(os.Args[0]) + " " + strings.Join(each(os.Args[1:]), " ")
 }
 
-func basename(path string, extensions ...string) string {
+//
+func Basename(path string, extensions ...string) string {
 	name := filepath.Base(path)
 	for _, ext := range extensions {
 		name = strings.TrimSuffix(name, "."+ext)
