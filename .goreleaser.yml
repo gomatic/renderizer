@@ -60,7 +60,7 @@ brews:
     # GitHub/GitLab repository to push the formula to
     tap:
       owner: gomatic
-      name: renderizer-homebrew
+      name: homebrew-renderizer
       # Optionally a token can be provided, if it differs from the token provided to GoReleaser
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 
