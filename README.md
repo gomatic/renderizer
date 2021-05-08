@@ -4,7 +4,7 @@
 
 Render Go text templates from the command line.
 
-    go get github.com/gomatic/renderizer/cmd/renderizer
+    go get github.com/gomatic/renderizer/v2/cmd/renderizer
 
 Supports providing top-level name/value pairs on the command line:
 
