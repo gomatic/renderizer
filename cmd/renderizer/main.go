@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gomatic/renderizer/pkg/renderizer"
 	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
+	"github.com/gomatic/renderizer/v2/pkg/renderizer"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 )
