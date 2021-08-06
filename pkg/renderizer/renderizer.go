@@ -44,6 +44,8 @@ type Options struct {
 	Verbose bool
 	//
 	Testing bool
+	//
+	Output string
 }
 
 //
@@ -215,7 +217,19 @@ func (settings *Options) Render() error {
 			}
 
 			data = b.Bytes()
-			fmt.Println(string(data))
+			fh := os.Stdout
+
+			if settings.Output != "" {
+				if fh, err = os.Create(settings.Output); err != nil {
+					log.Print(err)
+					return 8
+				}
+			}
+
+			if _, err = fh.Write(data); err != nil {
+				log.Print(err)
+				return 8
+			}
 
 			return 0
 		}()

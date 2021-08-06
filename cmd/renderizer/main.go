@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gomatic/renderizer/v2/pkg/renderizer"
 	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
-	"github.com/gomatic/renderizer/v2/pkg/renderizer"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 )
@@ -122,6 +122,13 @@ func main() {
 			Usage:       "enable verbose output",
 			EnvVars:     []string{"RENDERIZER_VEBOSE"},
 			Destination: &settings.Options.Verbose,
+		},
+		&cli.StringFlag{
+			Name:        "output",
+			Aliases:     []string{"o"},
+			Usage:       "writes template to output file rather than stdout",
+			Value:       settings.Options.Output,
+			Destination: &settings.Options.Output,
 		},
 	}
 
@@ -241,7 +248,7 @@ func main() {
 					flag = parts[0]
 				}
 				switch flag[2:] {
-				case "settings", "missing", "environment", "env":
+				case "settings", "missing", "environment", "env", "output":
 					// If the flag requires a parameter but it is not specified with an =, grab the next argument too.
 					if !strings.Contains(larg, "=") {
 						next = true
