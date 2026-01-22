@@ -10,7 +10,7 @@ import (
 )
 
 // TestCLI runs comprehensive tests for the renderizer CLI command
-// covering all features and edge cases to ensure 100% feature coverage
+// covering all CLI features and edge cases to ensure they are properly tested
 
 var (
 	// Build the binary once for all tests
