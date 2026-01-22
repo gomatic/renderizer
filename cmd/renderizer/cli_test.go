@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,7 +19,7 @@ var (
 
 func TestMain(m *testing.M) {
 	// Build the binary
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		panic(err)
 	}
@@ -404,7 +403,7 @@ func TestCLIMissingKey(t *testing.T) {
 // TestCLITemplateFile tests rendering from template files
 func TestCLITemplateFile(t *testing.T) {
 	// Create temporary directory and template file
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -412,7 +411,7 @@ func TestCLITemplateFile(t *testing.T) {
 	
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	templateContent := "Hello, {{.Name}}!"
-	if err := ioutil.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 	
@@ -444,7 +443,7 @@ func TestCLITemplateFile(t *testing.T) {
 // TestCLISettingsFile tests loading settings from YAML files
 func TestCLISettingsFile(t *testing.T) {
 	// Create temporary directory and files
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -456,10 +455,10 @@ func TestCLISettingsFile(t *testing.T) {
 	templateContent := "Name: {{.Name}}, Items: {{range .Items}}{{.}},{{end}}"
 	settingsContent := "Name: FromSettings\nItems:\n  - one\n  - two\n  - three"
 	
-	if err := ioutil.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(settingsPath, []byte(settingsContent), 0644); err != nil {
+	if err := os.WriteFile(settingsPath, []byte(settingsContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 	
@@ -498,7 +497,7 @@ func TestCLISettingsFile(t *testing.T) {
 // TestCLIMultipleTemplates tests rendering multiple template files
 func TestCLIMultipleTemplates(t *testing.T) {
 	// Create temporary directory and template files
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -507,10 +506,10 @@ func TestCLIMultipleTemplates(t *testing.T) {
 	template1Path := filepath.Join(tmpDir, "test1.tmpl")
 	template2Path := filepath.Join(tmpDir, "test2.tmpl")
 	
-	if err := ioutil.WriteFile(template1Path, []byte("First: {{.Name}}"), 0644); err != nil {
+	if err := os.WriteFile(template1Path, []byte("First: {{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(template2Path, []byte("Second: {{.Name}}"), 0644); err != nil {
+	if err := os.WriteFile(template2Path, []byte("Second: {{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	
@@ -565,7 +564,7 @@ func TestCLIDottedNotation(t *testing.T) {
 // TestCLIDefaultTemplateDiscovery tests default template file discovery
 func TestCLIDefaultTemplateDiscovery(t *testing.T) {
 	// Create temporary directory and navigate to it
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -594,7 +593,7 @@ func TestCLIDefaultTemplateDiscovery(t *testing.T) {
 		t.Run("discover_"+filename, func(t *testing.T) {
 			// Create the template file
 			content := "Test: {{.Value}}"
-			if err := ioutil.WriteFile(filename, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
 				t.Fatal(err)
 			}
 			defer os.Remove(filename)
@@ -613,14 +612,14 @@ func TestCLIDefaultTemplateDiscovery(t *testing.T) {
 // TestCLIVerboseMode tests verbose output mode
 func TestCLIVerboseMode(t *testing.T) {
 	// Create temporary template file
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
 	
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
-	if err := ioutil.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	
@@ -655,7 +654,7 @@ func TestCLIVerboseMode(t *testing.T) {
 // TestCLISettingsEnvironmentVariable tests RENDERIZER environment variable
 func TestCLISettingsEnvironmentVariable(t *testing.T) {
 	// Create temporary directory and files
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -664,10 +663,10 @@ func TestCLISettingsEnvironmentVariable(t *testing.T) {
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	settingsPath := filepath.Join(tmpDir, "settings.yaml")
 	
-	if err := ioutil.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(settingsPath, []byte("Name: EnvSettings"), 0644); err != nil {
+	if err := os.WriteFile(settingsPath, []byte("Name: EnvSettings"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	
@@ -773,7 +772,7 @@ func TestCLITypedValues(t *testing.T) {
 
 // TestCLIMultipleSettingsFiles tests loading from multiple settings files
 func TestCLIMultipleSettingsFiles(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -787,13 +786,13 @@ func TestCLIMultipleSettingsFiles(t *testing.T) {
 	settings1Content := "First: FromFirst"
 	settings2Content := "Second: FromSecond"
 	
-	if err := ioutil.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(settings1Path, []byte(settings1Content), 0644); err != nil {
+	if err := os.WriteFile(settings1Path, []byte(settings1Content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(settings2Path, []byte(settings2Content), 0644); err != nil {
+	if err := os.WriteFile(settings2Path, []byte(settings2Content), 0644); err != nil {
 		t.Fatal(err)
 	}
 	
@@ -815,7 +814,7 @@ func TestCLIMultipleSettingsFiles(t *testing.T) {
 
 // TestCLIShortFlags tests short flag aliases
 func TestCLIShortFlags(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -824,10 +823,10 @@ func TestCLIShortFlags(t *testing.T) {
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	settingsPath := filepath.Join(tmpDir, "settings.yaml")
 	
-	if err := ioutil.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(settingsPath, []byte("Name: Test"), 0644); err != nil {
+	if err := os.WriteFile(settingsPath, []byte("Name: Test"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	
@@ -910,7 +909,7 @@ func TestCLIErrorCases(t *testing.T) {
 
 // TestCLIDefaultSettingsFileOptional tests that default settings files are optional
 func TestCLIDefaultSettingsFileOptional(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "renderizer-test")
+	tmpDir, err := os.MkdirTemp("", "renderizer-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -929,7 +928,7 @@ func TestCLIDefaultSettingsFileOptional(t *testing.T) {
 	}
 	
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
-	if err := ioutil.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
+	if err := os.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	
