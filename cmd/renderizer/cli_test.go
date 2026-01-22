@@ -89,8 +89,6 @@ func TestCLIVersion(t *testing.T) {
 	}
 }
 
-
-
 // TestCLIHelp tests the help command
 func TestCLIHelp(t *testing.T) {
 	tests := []struct {
@@ -596,9 +594,12 @@ func TestCLIDefaultTemplateDiscovery(t *testing.T) {
 			if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
 				t.Fatal(err)
 			}
-			defer os.Remove(filename)
 			
 			stdout, stderr, exitCode := runRenderizer(t, "", "--value=success")
+			
+			// Clean up immediately to prevent interference with subsequent tests
+			os.Remove(filename)
+			
 			if exitCode != 0 {
 				t.Errorf("Expected exit code 0, got %d. Stderr: %s", exitCode, stderr)
 			}
