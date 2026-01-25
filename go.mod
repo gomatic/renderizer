@@ -1,6 +1,6 @@
 module github.com/gomatic/renderizer/v2
 
-go 1.22
+go 1.25
 
 require (
 	github.com/gomatic/clock v1.0.0
