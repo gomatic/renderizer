@@ -641,7 +641,9 @@ func TestOptions_Render_Stdin(t *testing.T) {
 
 			// Write to stdin in a goroutine
 			go func() {
-				defer stdinW.Close()
+				defer func() {
+					_ = stdinW.Close()
+				}()
 				if _, err := stdinW.WriteString(tt.stdin); err != nil {
 					t.Errorf("Failed to write to stdin: %v", err)
 				}
@@ -661,12 +663,12 @@ func TestOptions_Render_Stdin(t *testing.T) {
 			exitCode, err := tt.settings.Render()
 
 			// Close pipes to signal EOF
-			stdoutW.Close()
-			stdinR.Close()
+			_ = stdoutW.Close()
+			_ = stdinR.Close()
 
 			// Wait for stdout capture to finish
 			<-stdoutDone
-			stdoutR.Close()
+			_ = stdoutR.Close()
 
 			// Check results
 			if err != nil {
@@ -770,7 +772,9 @@ func TestOptions_Render_File(t *testing.T) {
 				}
 				os.Stdin = stdinR
 				go func() {
-					defer stdinW.Close()
+					defer func() {
+						_ = stdinW.Close()
+					}()
 					if _, err := stdinW.WriteString(tt.template); err != nil {
 						t.Errorf("Failed to write to stdin: %v", err)
 					}
@@ -798,15 +802,15 @@ func TestOptions_Render_File(t *testing.T) {
 			exitCode, err := tt.settings.Render()
 
 			// Close pipes to signal EOF
-			stdoutW.Close()
+			_ = stdoutW.Close()
 			if tt.settings.Stdin {
 				// Close the stdin pipe we created
-				stdinR.Close()
+				_ = stdinR.Close()
 			}
 
 			// Wait for stdout capture to finish
 			<-stdoutDone
-			stdoutR.Close()
+			_ = stdoutR.Close()
 
 			// Check results
 			if err != nil {
@@ -851,7 +855,9 @@ func TestOptions_Render_Environment(t *testing.T) {
 	}
 	os.Stdin = stdinR
 	go func() {
-		defer stdinW.Close()
+		defer func() {
+			_ = stdinW.Close()
+		}()
 		if _, err := stdinW.WriteString("{{.env.TEST_VAR}}"); err != nil {
 			t.Errorf("Failed to write to stdin: %v", err)
 		}
@@ -877,10 +883,10 @@ func TestOptions_Render_Environment(t *testing.T) {
 	exitCode, err := settings.Render()
 
 	// Close pipes
-	stdoutW.Close()
-	stdinR.Close()
+	_ = stdoutW.Close()
+	_ = stdinR.Close()
 	<-stdoutDone
-	stdoutR.Close()
+	_ = stdoutR.Close()
 
 	if err != nil {
 		t.Errorf("Render() returned error: %v", err)

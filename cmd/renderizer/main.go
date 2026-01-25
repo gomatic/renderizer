@@ -213,11 +213,13 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
 			settings.Options.MissingKey = "error"
 		}
 
-		if len(configs.Value()) == 0 {
+		// Get settings files from the parsed context, not from the flag value directly
+		settingsFiles := ctx.StringSlice("settings")
+		if len(settingsFiles) == 0 {
 			settings.Defaulted = true
 			settings.ConfigFiles = cli.NewStringSlice("." + mainName + ".yaml")
 		} else {
-			settings.ConfigFiles = &configs
+			settings.ConfigFiles = cli.NewStringSlice(settingsFiles...)
 		}
 
 		for _, config := range settings.ConfigFiles.Value() {
@@ -334,9 +336,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
 				stdoutDone = make(chan struct{})
 				os.Stdout = stdoutPipeW
 				defer func() {
-					stdoutPipeW.Close()
+					_ = stdoutPipeW.Close()
 					<-stdoutDone // Wait for copy to complete
-					stdoutPipeR.Close()
+					_ = stdoutPipeR.Close()
 					os.Stdout = oldStdout
 				}()
 				// Copy from pipe to the actual writer in a goroutine
@@ -363,9 +365,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
 				stderrDone = make(chan struct{})
 				os.Stderr = stderrPipeW
 				defer func() {
-					stderrPipeW.Close()
+					_ = stderrPipeW.Close()
 					<-stderrDone // Wait for copy to complete
-					stderrPipeR.Close()
+					_ = stderrPipeR.Close()
 					os.Stderr = oldStderr
 				}()
 				// Copy from pipe to the actual writer in a goroutine
@@ -386,8 +388,12 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
 			if err != nil {
 				return err
 			}
-			defer os.Remove(tmpFile.Name())
-			defer tmpFile.Close()
+			defer func() {
+				_ = os.Remove(tmpFile.Name())
+			}()
+			defer func() {
+				_ = tmpFile.Close()
+			}()
 
 			// Copy stdin to temp file
 			if _, err := io.Copy(tmpFile, stdin); err != nil {

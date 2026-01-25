@@ -193,7 +193,9 @@ func (settings *Options) Render() (int, error) {
 					log.Println(err)
 					return 1
 				}
-				defer r.Close()
+				defer func() {
+					_ = r.Close()
+				}()
 			}
 			f, err := io.ReadAll(r)
 			if err != nil {

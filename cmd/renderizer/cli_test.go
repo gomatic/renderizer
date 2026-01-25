@@ -35,15 +35,17 @@ func runRenderizer(t *testing.T, stdin string, args ...string) (string, string, 
 	if err != nil {
 		t.Fatalf("Failed to create stdout pipe: %v", err)
 	}
-	defer stdoutR.Close()
-	defer stdoutW.Close()
+	defer func() {
+		_ = stdoutR.Close()
+	}()
 
 	stderrR, stderrW, err := os.Pipe()
 	if err != nil {
 		t.Fatalf("Failed to create stderr pipe: %v", err)
 	}
-	defer stderrR.Close()
-	defer stderrW.Close()
+	defer func() {
+		_ = stderrR.Close()
+	}()
 
 	// Set testing environment variable
 	t.Setenv("RENDERIZER_TESTING", "true")
@@ -70,12 +72,16 @@ func runRenderizer(t *testing.T, stdin string, args ...string) (string, string, 
 	result := run(fullArgs, stdinReader, stdoutW, stderrW)
 
 	// Close writers to signal EOF - this will cause the readers to finish
-	stdoutW.Close()
-	stderrW.Close()
+	_ = stdoutW.Close()
+	_ = stderrW.Close()
 
 	// Wait for readers to finish copying all data
 	<-stdoutDone
 	<-stderrDone
+
+	// Close readers after we're done (defer will also close them, but this is explicit)
+	_ = stdoutR.Close()
+	_ = stderrR.Close()
 
 	return stdoutBuf.String(), stderrBuf.String(), result.ExitCode
 }
@@ -603,7 +609,7 @@ func TestCLIDefaultTemplateDiscovery(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, "", "--value=success")
 
 			// Clean up immediately to prevent interference with subsequent tests
-			os.Remove(filename)
+			_ = os.Remove(filename)
 
 			if exitCode != 0 {
 				t.Errorf("Expected exit code 0, got %d. Stderr: %s", exitCode, stderr)

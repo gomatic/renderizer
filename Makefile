@@ -12,8 +12,6 @@ PREFIX ?= usr/local
 
 #
 
-.PHONY : all release snapshot vet test examples tag
-.PHONY : help
 .DEFAULT_GOAL := snapshot
 
 #
@@ -24,31 +22,48 @@ TEST_SOURCES = $(filter %_test.go, $(ALL_SOURCES))
 
 #
 
-build snapshot: vet test $(BINARY) # Build snapshot
+.PHONY: build snapshot
+build snapshot: lint test $(BINARY) # Build snapshot
 
+.PHONY: all
 all: release ## Make everything
 
 $(BINARY): $(MAIN_SOURCES)
-	goreleaser --snapshot --rm-dist --skip-publish --skip-validate
+	go tool github.com/goreleaser/goreleaser --snapshot --rm-dist --skip-publish --skip-validate
 
-release: vet test ## Build releases
+.PHONY: release
+release: lint test ## Build releases
 	$(MAKE) full-release BUILD=
 
+.PHONY: full-release
 full-release: tag
-	goreleaser --rm-dist --skip-publish
+	go tool github.com/goreleaser/goreleaser --rm-dist --skip-publish
 
+.PHONY: tag
 tag:
 	git tag -f -m $(TAG) $(TAG)
 
+.PHONY: vet test
 vet test: ## Run tests or vet
 	go $@ ./...
 
+.PHONY: lint
+lint: vet ## Run tests or vet
+	go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint run
+
+.PHONY: fmt
+fmt: ## Run tests or vet
+	go tool golang.org/x/tools/cmd/goimports -w cmd pkg
+
+.PHONY: tests examples
 tests examples: snapshot
 	@scripts/test-iterate test examples
 
+.PHONY: clean
 clean:
 	rm -rf build
 
+.PHONY: help
 help: ## This help.
 	@echo $(APP_NAME)
 	@echo MAIN_SOURCES=$(MAIN_SOURCES)
