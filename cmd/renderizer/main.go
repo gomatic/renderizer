@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gomatic/renderizer/v2/pkg/renderizer"
 	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
-	"github.com/gomatic/renderizer/v2/pkg/renderizer"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 )
@@ -25,7 +25,6 @@ var (
 	appver   = selfz + "/" + semver
 )
 
-//
 type Settings struct {
 	Defaulted bool
 	// Configuration yaml
@@ -34,7 +33,6 @@ type Settings struct {
 	Options renderizer.Options
 }
 
-//
 var settings = Settings{
 	ConfigFiles: &cli.StringSlice{},
 	Options: renderizer.Options{
@@ -48,7 +46,6 @@ var settings = Settings{
 	},
 }
 
-//
 func main() {
 	app := cli.NewApp()
 	app.Name = "renderizer"

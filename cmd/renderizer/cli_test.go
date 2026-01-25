@@ -40,18 +40,18 @@ func TestMain(m *testing.M) {
 func runRenderizer(t *testing.T, stdin string, args ...string) (string, string, int) {
 	t.Helper()
 	cmd := exec.Command(binaryPath, args...)
-	
+
 	// Set testing environment variable
 	cmd.Env = append(os.Environ(), "RENDERIZER_TESTING=true")
-	
+
 	if stdin != "" {
 		cmd.Stdin = strings.NewReader(stdin)
 	}
-	
+
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	
+
 	err := cmd.Run()
 	exitCode := 0
 	if err != nil {
@@ -62,7 +62,7 @@ func runRenderizer(t *testing.T, stdin string, args ...string) (string, string, 
 			exitCode = 1
 		}
 	}
-	
+
 	return stdout.String(), stderr.String(), exitCode
 }
 
@@ -75,7 +75,7 @@ func TestCLIVersion(t *testing.T) {
 		{"version flag", []string{"--version"}},
 		{"short version flag", []string{"-v"}},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, _, exitCode := runRenderizer(t, "", tt.args...)
@@ -98,7 +98,7 @@ func TestCLIHelp(t *testing.T) {
 		{"help flag", []string{"--help"}},
 		{"short help flag", []string{"-h"}},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, _, exitCode := runRenderizer(t, "", tt.args...)
@@ -151,7 +151,7 @@ func TestCLIStdinBasic(t *testing.T) {
 			expected: "YES",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -186,7 +186,7 @@ func TestCLIMultipleValues(t *testing.T) {
 			expected: []string{"0:a", "1:b", "2:c"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -229,7 +229,7 @@ func TestCLICapitalization(t *testing.T) {
 			expected: "first second",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -248,7 +248,7 @@ func TestCLIEnvironment(t *testing.T) {
 	// Set test environment variable
 	os.Setenv("TEST_VAR", "test_value")
 	defer os.Unsetenv("TEST_VAR")
-	
+
 	tests := []struct {
 		name     string
 		template string
@@ -274,7 +274,7 @@ func TestCLIEnvironment(t *testing.T) {
 			expected: "test_value",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -339,7 +339,7 @@ func TestCLITemplateFunctions(t *testing.T) {
 			expected: "abcdef",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -386,7 +386,7 @@ func TestCLIMissingKey(t *testing.T) {
 			expectError: false,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, _, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -406,13 +406,13 @@ func TestCLITemplateFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	templateContent := "Hello, {{.Name}}!"
 	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	tests := []struct {
 		name     string
 		args     []string
@@ -424,7 +424,7 @@ func TestCLITemplateFile(t *testing.T) {
 			expected: "Hello, World!",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, "", tt.args...)
@@ -446,20 +446,20 @@ func TestCLISettingsFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	settingsPath := filepath.Join(tmpDir, "settings.yaml")
-	
+
 	templateContent := "Name: {{.Name}}, Items: {{range .Items}}{{.}},{{end}}"
 	settingsContent := "Name: FromSettings\nItems:\n  - one\n  - two\n  - three"
-	
+
 	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(settingsPath, []byte(settingsContent), 0644); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	tests := []struct {
 		name     string
 		args     []string
@@ -476,7 +476,7 @@ func TestCLISettingsFile(t *testing.T) {
 			expected: []string{"Name: Overridden", "one,", "two,", "three,"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, "", tt.args...)
@@ -500,22 +500,22 @@ func TestCLIMultipleTemplates(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	template1Path := filepath.Join(tmpDir, "test1.tmpl")
 	template2Path := filepath.Join(tmpDir, "test2.tmpl")
-	
+
 	if err := os.WriteFile(template1Path, []byte("First: {{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(template2Path, []byte("Second: {{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	stdout, stderr, exitCode := runRenderizer(t, "", template1Path, template2Path, "--name=Test")
 	if exitCode != 0 {
 		t.Errorf("Expected exit code 0, got %d. Stderr: %s", exitCode, stderr)
 	}
-	
+
 	if !strings.Contains(stdout, "First: Test") {
 		t.Errorf("Expected output to contain 'First: Test', got: %q", stdout)
 	}
@@ -545,7 +545,7 @@ func TestCLIDottedNotation(t *testing.T) {
 			expected: "nested",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -567,26 +567,26 @@ func TestCLIDefaultTemplateDiscovery(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	// Save current directory
 	origDir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Chdir(origDir)
-	
+
 	// Change to temp directory
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	// Test various default file names
 	testFiles := []string{
 		"renderizer.yaml.tmpl",
 		"renderizer.json.tmpl",
 		"renderizer.txt.tmpl",
 	}
-	
+
 	for _, filename := range testFiles {
 		t.Run("discover_"+filename, func(t *testing.T) {
 			// Create the template file
@@ -594,12 +594,12 @@ func TestCLIDefaultTemplateDiscovery(t *testing.T) {
 			if err := os.WriteFile(filename, []byte(content), 0644); err != nil {
 				t.Fatal(err)
 			}
-			
+
 			stdout, stderr, exitCode := runRenderizer(t, "", "--value=success")
-			
+
 			// Clean up immediately to prevent interference with subsequent tests
 			os.Remove(filename)
-			
+
 			if exitCode != 0 {
 				t.Errorf("Expected exit code 0, got %d. Stderr: %s", exitCode, stderr)
 			}
@@ -618,12 +618,12 @@ func TestCLIVerboseMode(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	if err := os.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	tests := []struct {
 		name string
 		args []string
@@ -637,7 +637,7 @@ func TestCLIVerboseMode(t *testing.T) {
 			args: []string{templatePath, "--name=Test", "-V"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Verbose mode produces output on stderr
@@ -660,30 +660,30 @@ func TestCLISettingsEnvironmentVariable(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	settingsPath := filepath.Join(tmpDir, "settings.yaml")
-	
+
 	if err := os.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(settingsPath, []byte("Name: EnvSettings"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	cmd := exec.Command(binaryPath, templatePath)
-	cmd.Env = append(os.Environ(), 
+	cmd.Env = append(os.Environ(),
 		"RENDERIZER_TESTING=true",
 		"RENDERIZER="+settingsPath,
 	)
-	
+
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
-	
+
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("Command failed: %v", err)
 	}
-	
+
 	if !strings.Contains(stdout.String(), "EnvSettings") {
 		t.Errorf("Expected output to contain 'EnvSettings', got: %q", stdout.String())
 	}
@@ -710,7 +710,7 @@ func TestCLIStdinFlag(t *testing.T) {
 			expected: "Value: 42",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.stdin, tt.args...)
@@ -757,7 +757,7 @@ func TestCLITypedValues(t *testing.T) {
 			expected: "correct",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -778,15 +778,15 @@ func TestCLIMultipleSettingsFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	settings1Path := filepath.Join(tmpDir, "settings1.yaml")
 	settings2Path := filepath.Join(tmpDir, "settings2.yaml")
-	
+
 	templateContent := "First: {{.First}}, Second: {{.Second}}"
 	settings1Content := "First: FromFirst"
 	settings2Content := "Second: FromSecond"
-	
+
 	if err := os.WriteFile(templatePath, []byte(templateContent), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -796,12 +796,12 @@ func TestCLIMultipleSettingsFiles(t *testing.T) {
 	if err := os.WriteFile(settings2Path, []byte(settings2Content), 0644); err != nil {
 		t.Fatal(err)
 	}
-	
-	stdout, stderr, exitCode := runRenderizer(t, "", 
-		templatePath, 
-		"--settings="+settings1Path, 
+
+	stdout, stderr, exitCode := runRenderizer(t, "",
+		templatePath,
+		"--settings="+settings1Path,
 		"--settings="+settings2Path)
-	
+
 	if exitCode != 0 {
 		t.Errorf("Expected exit code 0, got %d. Stderr: %s", exitCode, stderr)
 	}
@@ -820,17 +820,17 @@ func TestCLIShortFlags(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	settingsPath := filepath.Join(tmpDir, "settings.yaml")
-	
+
 	if err := os.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(settingsPath, []byte("Name: Test"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	tests := []struct {
 		name     string
 		args     []string
@@ -852,7 +852,7 @@ func TestCLIShortFlags(t *testing.T) {
 			expected: "Value",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var template string
@@ -896,7 +896,7 @@ func TestCLIErrorCases(t *testing.T) {
 			expectError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, _, exitCode := runRenderizer(t, tt.template, tt.args...)
@@ -915,24 +915,24 @@ func TestCLIDefaultSettingsFileOptional(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
-	
+
 	// Save current directory
 	origDir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Chdir(origDir)
-	
+
 	// Change to temp directory
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	templatePath := filepath.Join(tmpDir, "test.tmpl")
 	if err := os.WriteFile(templatePath, []byte("{{.Name}}"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	
+
 	// When default settings file doesn't exist, should not error
 	stdout, _, exitCode := runRenderizer(t, "", templatePath, "--name=Value")
 	if exitCode != 0 {
@@ -989,7 +989,7 @@ func TestCLINestedVariables(t *testing.T) {
 			expected: "deep",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stdout, stderr, exitCode := runRenderizer(t, tt.template, tt.args...)

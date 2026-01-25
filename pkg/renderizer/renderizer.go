@@ -20,7 +20,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-//
 type Options struct {
 	// Capitalization is a positional toggles. The following variable names are capitalized (title-case).
 	Capitalize bool
@@ -46,22 +45,18 @@ type Options struct {
 	Testing bool
 }
 
-//
 type Renderizer interface {
 	Render() error
 }
 
-//
 func New(settings Options) Renderizer {
 	return &settings
 }
 
-//
 func Render(settings Options) error {
 	return settings.Render()
 }
 
-//
 func (settings *Options) Render() error {
 
 	if settings.Testing {
