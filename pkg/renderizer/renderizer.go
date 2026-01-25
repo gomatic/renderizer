@@ -46,18 +46,24 @@ type Options struct {
 }
 
 type Renderizer interface {
-	Render() error
+	Render() (int, error)
 }
 
 func New(settings Options) Renderizer {
 	return &settings
 }
 
-func Render(settings Options) error {
+// Render executes the template rendering and returns the exit code.
+// Exit code 0 means success, non-zero means error.
+// The caller is responsible for calling os.Exit() with the returned code.
+func Render(settings Options) (int, error) {
 	return settings.Render()
 }
 
-func (settings *Options) Render() error {
+// Render executes the template rendering and returns the exit code.
+// Exit code 0 means success, non-zero means error.
+// The caller is responsible for calling os.Exit() with the returned code.
+func (settings *Options) Render() (int, error) {
 
 	if settings.Testing {
 		rand.Seed(0)
@@ -216,8 +222,7 @@ func (settings *Options) Render() error {
 		}()
 	}
 
-	os.Exit(status)
-	return nil
+	return status, nil
 }
 
 // Transform a string into the best type.

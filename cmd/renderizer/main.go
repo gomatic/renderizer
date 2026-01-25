@@ -2,17 +2,18 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/gomatic/renderizer/v2/pkg/renderizer"
 	"github.com/imdario/mergo"
 	"github.com/kardianos/osext"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
+
+	"github.com/gomatic/renderizer/v2/pkg/renderizer"
 )
 
 var (
@@ -33,27 +34,45 @@ type Settings struct {
 	Options renderizer.Options
 }
 
-var settings = Settings{
-	ConfigFiles: &cli.StringSlice{},
-	Options: renderizer.Options{
-		Config:      map[string]interface{}{},
-		Capitalize:  true,
-		MissingKey:  "error",
-		TimeFormat:  "20060102T150405",
-		Environment: "env",
-		Arguments:   []string{},
-		Templates:   []string{},
-	},
+// RunResult contains the result of running the CLI
+type RunResult struct {
+	ExitCode int
+	Error    error
 }
 
-func main() {
+// run executes the renderizer CLI with the given arguments
+// It returns the exit code and any error that occurred
+func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
+	// Reset settings for each run
+	settings := Settings{
+		ConfigFiles: &cli.StringSlice{},
+		Options: renderizer.Options{
+			Config:      map[string]interface{}{},
+			Capitalize:  true,
+			MissingKey:  "error",
+			TimeFormat:  "20060102T150405",
+			Environment: "env",
+			Arguments:   []string{},
+			Templates:   []string{},
+		},
+	}
+
 	app := cli.NewApp()
 	app.Name = "renderizer"
 	app.Usage = "renderizer [options] [--name=value...] template..."
 	app.UsageText = "Template renderer"
 	app.Version = appver
 	app.EnableBashCompletion = true
+	app.Writer = stdout
+	app.ErrWriter = stderr
+	// Override ExitErrHandler to return errors instead of calling os.Exit()
+	// This allows tests to capture exit codes
+	app.ExitErrHandler = func(ctx *cli.Context, err error) {
+		// Don't call os.Exit() - just let the error be returned from app.Run()
+		// The error will be handled by the caller
+	}
 
+	// Set environment variable
 	_ = os.Setenv("RENDERIZER_VERSION", appver)
 
 	configs := cli.StringSlice{}
@@ -63,7 +82,7 @@ func main() {
 			Name:  "version",
 			Usage: "Shows the app version",
 			Action: func(ctx *cli.Context) error {
-				fmt.Println(ctx.App.Version)
+				_, _ = fmt.Fprintln(stdout, ctx.App.Version)
 				return nil
 			},
 		},
@@ -123,10 +142,27 @@ func main() {
 	}
 
 	app.Before = func(ctx *cli.Context) error {
-
+		// Check if stdin is available (not a terminal)
 		fi, _ := os.Stdin.Stat()
-
 		settings.Options.Stdin = settings.Options.Stdin || (fi.Mode()&os.ModeCharDevice) == 0
+
+		// If stdin is provided in test, check if it has content
+		// Only set Stdin=true if there's actual content, otherwise allow template discovery
+		if stdin != nil && stdin != os.Stdin {
+			// For seekable readers (like bytes.Reader), check if there's content
+			if seeker, ok := stdin.(io.Seeker); ok {
+				pos, _ := seeker.Seek(0, io.SeekCurrent)
+				size, _ := seeker.Seek(0, io.SeekEnd)
+				seeker.Seek(pos, io.SeekStart) // Restore position
+				if size > 0 {
+					settings.Options.Stdin = true
+				}
+			} else {
+				// For non-seekable readers, we can't check without consuming
+				// Only set if explicitly provided and not empty
+				// This is handled later when we actually read from stdin
+			}
+		}
 
 		settings.Options.Arguments = append(settings.Options.Arguments, ctx.Args().Slice()...)
 
@@ -143,7 +179,6 @@ func main() {
 
 		if len(settings.Options.Templates) == 0 && !settings.Options.Stdin {
 			// Try default the template name
-
 			name := func() string {
 				for _, base := range bases {
 					for _, ext := range []string{".tmpl", ""} {
@@ -165,7 +200,7 @@ func main() {
 			}
 
 			if len(settings.Options.Templates) == 0 {
-				return cli.NewExitError("missing template name", 1)
+				return cli.Exit("missing template name", 1)
 			}
 
 			mainName = strings.Split(strings.TrimLeft(filepath.Base(settings.Options.Templates[0]), "."), ".")[0]
@@ -174,7 +209,7 @@ func main() {
 		switch settings.Options.MissingKey {
 		case "zero", "error", "default", "invalid":
 		default:
-			_, _ = fmt.Fprintf(os.Stderr, "ERROR: Resetting invalid missingkey: %+v", settings.Options.MissingKey)
+			_, _ = fmt.Fprintf(stderr, "ERROR: Resetting invalid missingkey: %+v", settings.Options.MissingKey)
 			settings.Options.MissingKey = "error"
 		}
 
@@ -186,7 +221,7 @@ func main() {
 		}
 
 		for _, config := range settings.ConfigFiles.Value() {
-			in, err := ioutil.ReadFile(config)
+			in, err := os.ReadFile(config)
 			if err != nil {
 				if !settings.Defaulted {
 					return err
@@ -219,14 +254,14 @@ func main() {
 		return nil
 	}
 
-	// Remove args that are not processed by urfave/cli
-	args := []string{os.Args[0]}
-	if len(os.Args) > 1 {
+	// Process args to separate flags from templates/arguments
+	processedArgs := []string{args[0]} // program name
+	if len(args) > 1 {
 		next := false
-		for _, arg := range os.Args[1:] {
+		for _, arg := range args[1:] {
 			larg := strings.ToLower(arg)
 			if next {
-				args = append(args, arg)
+				processedArgs = append(processedArgs, arg)
 				next = false
 				continue
 			}
@@ -245,7 +280,7 @@ func main() {
 					}
 					fallthrough
 				case "debug", "verbose", "testing", "version", "stdin", "help":
-					args = append(args, arg)
+					processedArgs = append(processedArgs, arg)
 					continue
 				}
 			} else if strings.HasPrefix(larg, "-") {
@@ -257,7 +292,7 @@ func main() {
 					}
 					fallthrough
 				default:
-					args = append(args, arg)
+					processedArgs = append(processedArgs, arg)
 					continue
 				}
 			} else {
@@ -270,8 +305,133 @@ func main() {
 	}
 
 	app.Action = func(_ *cli.Context) error {
-		return renderizer.Render(settings.Options)
+		// Save original stdin/stdout for restoration
+		oldStdin := os.Stdin
+		oldStdout := os.Stdout
+		oldStderr := os.Stderr
+
+		// Redirect stdout/stderr if custom writers provided
+		// If the writer is already a *os.File (like from a pipe), use it directly
+		// Otherwise, create a pipe and copy to the writer
+		var stdoutPipeR, stdoutPipeW *os.File
+		var stderrPipeR, stderrPipeW *os.File
+		var stdoutDone, stderrDone chan struct{}
+
+		if stdout != os.Stdout {
+			if f, ok := stdout.(*os.File); ok {
+				// Already a file (like from a pipe), use it directly
+				os.Stdout = f
+				defer func() {
+					os.Stdout = oldStdout
+				}()
+			} else {
+				// Need to use a pipe to redirect to the writer
+				var err error
+				stdoutPipeR, stdoutPipeW, err = os.Pipe()
+				if err != nil {
+					return err
+				}
+				stdoutDone = make(chan struct{})
+				os.Stdout = stdoutPipeW
+				defer func() {
+					stdoutPipeW.Close()
+					<-stdoutDone // Wait for copy to complete
+					stdoutPipeR.Close()
+					os.Stdout = oldStdout
+				}()
+				// Copy from pipe to the actual writer in a goroutine
+				go func() {
+					io.Copy(stdout, stdoutPipeR)
+					close(stdoutDone)
+				}()
+			}
+		}
+		if stderr != os.Stderr {
+			if f, ok := stderr.(*os.File); ok {
+				// Already a file (like from a pipe), use it directly
+				os.Stderr = f
+				defer func() { os.Stderr = oldStderr }()
+			} else {
+				// Need to use a pipe to redirect to the writer
+				var err error
+				stderrPipeR, stderrPipeW, err = os.Pipe()
+				if err != nil {
+					return err
+				}
+				stderrDone = make(chan struct{})
+				os.Stderr = stderrPipeW
+				defer func() {
+					stderrPipeW.Close()
+					<-stderrDone // Wait for copy to complete
+					stderrPipeR.Close()
+					os.Stderr = oldStderr
+				}()
+				// Copy from pipe to the actual writer in a goroutine
+				go func() {
+					io.Copy(stderr, stderrPipeR)
+					close(stderrDone)
+				}()
+			}
+		}
+
+		// Handle custom stdin for testing
+		// renderizer reads from os.Stdin, so we need to replace it temporarily
+		if stdin != nil && stdin != os.Stdin {
+			// Create a temporary file and copy stdin content to it
+			tmpFile, err := os.CreateTemp("", "renderizer-stdin-*")
+			if err != nil {
+				return err
+			}
+			defer os.Remove(tmpFile.Name())
+			defer tmpFile.Close()
+
+			// Copy stdin to temp file
+			if _, err := io.Copy(tmpFile, stdin); err != nil {
+				return err
+			}
+			tmpFile.Seek(0, 0)
+
+			// Replace os.Stdin with our temp file
+			os.Stdin = tmpFile
+			defer func() { os.Stdin = oldStdin }()
+		}
+
+		// Call renderizer - it now returns exit code instead of calling os.Exit()
+		// Note: renderizer uses fmt.Println which writes to os.Stdout
+		// So we need os.Stdout redirected above
+		exitCode, err := renderizer.Render(settings.Options)
+		if err != nil {
+			return err
+		}
+		if exitCode != 0 {
+			// Return a cli.Exit error with the exit code
+			// This will be caught by app.Run() and returned as an error
+			// cli.Exit implements cli.ExitCoder interface
+			return cli.Exit("", exitCode)
+		}
+		return nil
 	}
 
-	_ = app.Run(args)
+	err := app.Run(processedArgs)
+	if err != nil {
+		if exitErr, ok := err.(cli.ExitCoder); ok {
+			return RunResult{ExitCode: exitErr.ExitCode(), Error: err}
+		}
+		return RunResult{ExitCode: 1, Error: err}
+	}
+
+	// Note: renderizer.Render() calls os.Exit(), so if we get here in production,
+	// it means os.Exit() was called. In tests, we need to handle this differently.
+	return RunResult{ExitCode: 0, Error: nil}
+}
+
+func main() {
+	result := run(os.Args, os.Stdin, os.Stdout, os.Stderr)
+	if result.Error != nil {
+		if exitErr, ok := result.Error.(cli.ExitCoder); ok {
+			os.Exit(exitErr.ExitCode())
+		}
+		os.Exit(1)
+	}
+	os.Exit(result.ExitCode)
 }
