@@ -55,8 +55,12 @@ lint: vet ## Run tests or vet
 fmt: ## Run tests or vet
 	go tool golang.org/x/tools/cmd/goimports -w cmd pkg
 
-.PHONY: tests examples
-tests examples: snapshot
+.PHONY: tests
+tests: snapshot examples
+	go test -v -race -count=5 -coverprofile=coverage.out ./...
+
+.PHONY: examples
+examples:
 	@scripts/test-iterate test examples
 
 .PHONY: clean
