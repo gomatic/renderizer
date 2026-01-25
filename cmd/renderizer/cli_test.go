@@ -54,11 +54,15 @@ func runRenderizer(t *testing.T, stdin string, args ...string) (string, string, 
 	stderrDone := make(chan bool)
 
 	go func() {
-		io.Copy(&stdoutBuf, stdoutR)
+		if _, err := io.Copy(&stdoutBuf, stdoutR); err != nil {
+			t.Errorf("Failed to copy stdout: %v", err)
+		}
 		stdoutDone <- true
 	}()
 	go func() {
-		io.Copy(&stderrBuf, stderrR)
+		if _, err := io.Copy(&stderrBuf, stderrR); err != nil {
+			t.Errorf("Failed to copy stderr: %v", err)
+		}
 		stderrDone <- true
 	}()
 

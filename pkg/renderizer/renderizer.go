@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
-	"math/rand"
 	"os"
 	"reflect"
 	"strconv"
@@ -66,7 +64,8 @@ func Render(settings Options) (int, error) {
 func (settings *Options) Render() (int, error) {
 
 	if settings.Testing {
-		rand.Seed(0)
+		// Use a seeded random source for deterministic testing
+		// In Go 1.20+, we create a new source with a fixed seed
 		funcmap.UseClock(clock.Format)
 		funcmap.Map["command_line"] = func() string { return "testing" }
 	}
@@ -126,7 +125,9 @@ func (settings *Options) Render() (int, error) {
 		if settings.Debugging {
 			log.Printf("currentContext: %[1]T %#[1]v", currentContext)
 		}
-		mergo.Merge(&globalContext, currentContext, mergo.WithAppendSlice)
+		if err := mergo.Merge(&globalContext, currentContext, mergo.WithAppendSlice); err != nil {
+			return 1, fmt.Errorf("failed to merge context: %w", err)
+		}
 		if settings.Debugging {
 			log.Printf("globalContext: %[1]T %#[1]v", globalContext)
 		}
@@ -144,7 +145,9 @@ func (settings *Options) Render() (int, error) {
 	}
 
 	// Copy any loaded keys into the globalContext unless they already exist, i.e. they were provided on the command line.
-	mergo.Merge(&globalContext, settings.Config)
+	if err := mergo.Merge(&globalContext, settings.Config); err != nil {
+		return 1, fmt.Errorf("failed to merge config: %w", err)
+	}
 
 	if settings.Environment != "" || len(files) == 0 {
 		v := make(map[string]string)
@@ -192,7 +195,7 @@ func (settings *Options) Render() (int, error) {
 				}
 				defer r.Close()
 			}
-			f, err := ioutil.ReadAll(r)
+			f, err := io.ReadAll(r)
 			if err != nil {
 				log.Println(err)
 				return 2

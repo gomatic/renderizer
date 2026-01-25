@@ -153,15 +153,15 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
 			if seeker, ok := stdin.(io.Seeker); ok {
 				pos, _ := seeker.Seek(0, io.SeekCurrent)
 				size, _ := seeker.Seek(0, io.SeekEnd)
-				seeker.Seek(pos, io.SeekStart) // Restore position
+				if _, err := seeker.Seek(pos, io.SeekStart); err != nil {
+					log.Printf("warning: failed to restore seek position: %v", err)
+				}
 				if size > 0 {
 					settings.Options.Stdin = true
 				}
-			} else {
-				// For non-seekable readers, we can't check without consuming
-				// Only set if explicitly provided and not empty
-				// This is handled later when we actually read from stdin
 			}
+			// For non-seekable readers, we can't check without consuming
+			// so we don't set Stdin=true here
 		}
 
 		settings.Options.Arguments = append(settings.Options.Arguments, ctx.Args().Slice()...)
@@ -341,7 +341,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
 				}()
 				// Copy from pipe to the actual writer in a goroutine
 				go func() {
-					io.Copy(stdout, stdoutPipeR)
+					if _, err := io.Copy(stdout, stdoutPipeR); err != nil {
+						log.Printf("warning: failed to copy stdout: %v", err)
+					}
 					close(stdoutDone)
 				}()
 			}
@@ -368,7 +370,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
 				}()
 				// Copy from pipe to the actual writer in a goroutine
 				go func() {
-					io.Copy(stderr, stderrPipeR)
+					if _, err := io.Copy(stderr, stderrPipeR); err != nil {
+						log.Printf("warning: failed to copy stderr: %v", err)
+					}
 					close(stderrDone)
 				}()
 			}
@@ -389,7 +393,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) RunResult {
 			if _, err := io.Copy(tmpFile, stdin); err != nil {
 				return err
 			}
-			tmpFile.Seek(0, 0)
+			if _, err := tmpFile.Seek(0, 0); err != nil {
+				return fmt.Errorf("failed to seek temp file: %w", err)
+			}
 
 			// Replace os.Stdin with our temp file
 			os.Stdin = tmpFile

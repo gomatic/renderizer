@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.25']
+        go-version: ['1.22']
     
     steps:
       - name: Checkout code
@@ -38,7 +38,7 @@ jobs:
       
       - name: Upload coverage
         uses: codecov/codecov-action@v4
-        if: matrix.go-version == '1.25'
+        if: matrix.go-version == '1.22'
         with:
           file: ./coverage.out
           fail_ci_if_error: false
@@ -54,7 +54,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.22'
       
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest

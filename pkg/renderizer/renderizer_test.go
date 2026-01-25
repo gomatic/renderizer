@@ -642,14 +642,18 @@ func TestOptions_Render_Stdin(t *testing.T) {
 			// Write to stdin in a goroutine
 			go func() {
 				defer stdinW.Close()
-				stdinW.WriteString(tt.stdin)
+				if _, err := stdinW.WriteString(tt.stdin); err != nil {
+					t.Errorf("Failed to write to stdin: %v", err)
+				}
 			}()
 
 			// Capture stdout in a goroutine
 			var stdoutBuf bytes.Buffer
 			stdoutDone := make(chan bool)
 			go func() {
-				io.Copy(&stdoutBuf, stdoutR)
+				if _, err := io.Copy(&stdoutBuf, stdoutR); err != nil {
+					t.Errorf("Failed to copy stdout: %v", err)
+				}
 				stdoutDone <- true
 			}()
 
@@ -767,7 +771,9 @@ func TestOptions_Render_File(t *testing.T) {
 				os.Stdin = stdinR
 				go func() {
 					defer stdinW.Close()
-					stdinW.WriteString(tt.template)
+					if _, err := stdinW.WriteString(tt.template); err != nil {
+						t.Errorf("Failed to write to stdin: %v", err)
+					}
 				}()
 			}
 
@@ -782,7 +788,9 @@ func TestOptions_Render_File(t *testing.T) {
 			var stdoutBuf bytes.Buffer
 			stdoutDone := make(chan bool)
 			go func() {
-				io.Copy(&stdoutBuf, stdoutR)
+				if _, err := io.Copy(&stdoutBuf, stdoutR); err != nil {
+					t.Errorf("Failed to copy stdout: %v", err)
+				}
 				stdoutDone <- true
 			}()
 
@@ -844,7 +852,9 @@ func TestOptions_Render_Environment(t *testing.T) {
 	os.Stdin = stdinR
 	go func() {
 		defer stdinW.Close()
-		stdinW.WriteString("{{.env.TEST_VAR}}")
+		if _, err := stdinW.WriteString("{{.env.TEST_VAR}}"); err != nil {
+			t.Errorf("Failed to write to stdin: %v", err)
+		}
 	}()
 
 	// Set up stdout capture
@@ -857,7 +867,9 @@ func TestOptions_Render_Environment(t *testing.T) {
 	var stdoutBuf bytes.Buffer
 	stdoutDone := make(chan bool)
 	go func() {
-		io.Copy(&stdoutBuf, stdoutR)
+		if _, err := io.Copy(&stdoutBuf, stdoutR); err != nil {
+			t.Errorf("Failed to copy stdout: %v", err)
+		}
 		stdoutDone <- true
 	}()
 
