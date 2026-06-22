@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"      # minor only — matches go.mod's major.minor; patch floats
+          check-latest: true      # always install the newest 1.26.x, never a pinned patch
+          cache: true
+      - run: make ci

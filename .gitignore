@@ -1,0 +1,19 @@
+# .gitignore — gomatic Go repository standard
+#
+# Ignore ONLY the build and test/coverage artifacts the Go toolchain and the
+# gomatic/build Makefile produce in a clean checkout. Cross-repo droppings from
+# editors, OSes, and AI assistants (.idea/ .vscode/ .cursor/ .claude/ .DS_Store
+# node_modules/ …) do NOT belong here — they live once in the global ignore at
+# ~/.config/git/ignore so every repo inherits them. Add only genuinely
+# app-specific paths for THIS repo below the standard block.
+
+# Build output: `make build` (bin/), `make build-all` / goreleaser (dist/)
+/bin/
+/dist/
+
+# Test + coverage: `make cover` / `make test-all` (COVERAGE_FOLDER=var),
+# compiled test binaries, and stray coverage profiles/reports
+/var/
+*.test
+*.out
+/coverage*

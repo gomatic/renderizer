@@ -1,0 +1,8 @@
+Name: Renderizer
+Deployment: master
+App: gomatic
+Repo: registry.gomatic.systems
+BasePort: 101
+Containers:
+- Name: one
+- Name: two

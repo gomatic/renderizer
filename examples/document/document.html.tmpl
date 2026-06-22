@@ -1,0 +1,16 @@
+<html>
+
+{{ with .foo }}
+Yay, foo was defined and has value {{ . }}!  (Requires --missing=default)
+{{ else }}
+Boo, foo was not defined.  (Requires -m=default.)
+{{ end }}
+
+<ul>
+    {{ range $index, $item := .items }}
+    <li>{{ $item }}</li>
+    {{ end }}
+</ul>
+
+</html>
+

@@ -1,0 +1,12 @@
+# .dockerignore — trim the Docker build context (unrelated to .gitignore).
+#
+# The Dockerfile copies only the prebuilt binary from dist/ (the gomatic
+# `make docker` pattern: build-all populates dist/ first), so the build context
+# needs nothing else. Ignore everything except dist/. The Dockerfile and
+# .dockerignore themselves are always available to the builder regardless.
+#
+# NOTE: repos whose Dockerfile instead builds from source with `COPY . .` use
+# the opposite shape — exclude dist/, bin/, var/, .git, editor dirs, docs — and
+# keep the sources (see e.g. modern-go-application, skyctl).
+*
+!dist

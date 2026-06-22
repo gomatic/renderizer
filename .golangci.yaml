@@ -1,0 +1,50 @@
+# golangci-lint v2 — the single lint config for every gomatic consumer repo.
+# https://golangci-lint.run/docs/configuration/file/
+#
+# It runs golangci-lint's default linters PLUS the central complexity gate
+# (gocognit/cyclop/funlen/nestif/maintidx/dupl) — folded in here so there is one
+# config and one `golangci-lint run` (via `make lint`), not a second pass over a
+# separate golangci.complexity.yaml. Tune the complexity thresholds below and
+# every repo that copies this file picks up the change.
+version: "2"
+
+run:
+  timeout: 5m
+  allow-parallel-runners: true
+
+linters:
+  # golangci-lint is the central COMPLEXITY gate (its intended role here): only
+  # the complexity linters run, so `make lint` does not impose golangci-lint's
+  # broad default set (errcheck/ineffassign/unused/...) on top of the standard
+  # already enforced by the dedicated `staticcheck`, `vet` and `vulncheck` steps.
+  default: none
+  enable:
+    - gocognit  # cognitive complexity — how hard a function is to read
+  settings:
+    gocognit:
+      # The gomatic Go standard caps cognitive complexity at 7: any function
+      # above it must be decomposed into named helpers or first-class functions.
+      # min-complexity is the threshold golangci REPORTS above, so 7 flags every
+      # function whose complexity exceeds 7 (i.e. 8+), matching `gocognit -over 7`.
+      min-complexity: 7
+  exclusions:
+    generated: lax
+    # Complexity is gated on PRODUCTION code only — matching the repos' original
+    # `gocognit` gate (which ran over non-_test.go files). Test code is naturally
+    # long/repetitive (table setups, fixtures), so it is skipped.
+    rules:
+      - path: _test\.go
+        linters:
+          - gocognit
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
