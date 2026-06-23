@@ -2,6 +2,10 @@
 
 renderizer renders Go `text/template` files from three merged variable sources — command-line flags, YAML settings, and the process environment — and analyzes templates to infer their input data model. It follows the [`gomatic/template.cli`](https://github.com/gomatic/template.cli) layered structure.
 
+## Public library
+
+The module root (`package renderizer`, [`renderizer.go`](../renderizer.go)) is a thin, minimal facade for embedding the engine in other Go programs (e.g. `lono`): `Funcs` (the Sprig + funcmap set, extensible by the caller), `Render`, and `Analyze`. It wraps `internal/template` and `internal/inspect` only — the implementation packages stay `internal/`, so the public surface is exactly those three functions plus their value types (`MissingKey`, `Name`, `Template`). The CLI and the library share one engine; neither tier depends on the other.
+
 ## Tiers
 
 Dependencies flow one direction: composition root → app → domain → implementation. No tier imports one to its left.

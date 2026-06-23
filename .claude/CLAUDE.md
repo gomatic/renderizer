@@ -2,6 +2,8 @@
 
 renderizer is a Go CLI that renders Go `text/template` files from command-line variables, YAML settings, and the environment. It follows the [`gomatic/template.cli`](https://github.com/gomatic/template.cli) layered structure and the gomatic Go quality gate. **Read [`docs/architecture.md`](../docs/architecture.md) before changing anything.**
 
+It also exposes a minimal **public library** at the module root (`package renderizer` — `Funcs`, `Render`, `Analyze`) so other Go programs (e.g. `lono`) embed the same engine. Keep that surface minimal: the implementation packages stay `internal/`; add to the facade only what an embedder genuinely needs.
+
 ## The tiers (app → domain → implementation)
 
 Dependencies flow one direction only.
