@@ -1,0 +1,13 @@
+# This repo is not yet modernized to the shared gomatic Go build standard. Until
+# it is, it opts out of the managed Go artifacts so `distribute` does not inject a
+# shared-gate CI workflow its hand-authored Makefile cannot satisfy. Remove an
+# entry (and adopt the artifact) as the repo modernizes; `git repo standards
+# verify` and the gate ratchet enforce that exemptions shrink toward zero.
+exempt:
+  artifact:makefile: "hand-authored Makefile; not yet on the shared Go gate"
+  artifact:golangci: "not yet on the shared golangci config"
+  artifact:workflow:go: "no shared-gate CI (make ci) until the Makefile is modernized"
+  artifact:workflow:actions: "deferred until modernization"
+  artifact:workflow:docs: "deferred until modernization"
+  artifact:workflow:shell: "deferred until modernization"
+  artifact:workflow:dockerfiles: "deferred until modernization"
