@@ -27,7 +27,7 @@ The CLI command definitions and the shared seams between the framework and the d
 
 - **`commands/<name>/command.go`** — one package per command (`render`, `analyze`, `version`). Each `Command(rt)` returns a `cli.Command` that binds flags to a domain `Config` and wires its action; the action assembles the config from flags + runtime seams, runs the domain, and writes the output. `render` is renderizer's default action, so its `Command` is used as the root and carries the global flags; `analyze` and `version` are subcommands.
 - **`action.go`** — `Write`, the shared seam that writes a command's raw output and propagates its error (mirroring template.cli's `app.Default`, but for bytes rather than JSON).
-- **`logger.go`** — `NewLogger` (slog level from the verbosity flags).
+- **`logger.go`** — `NewLogger` maps the verbosity flags to a level and builds the logger via [`gomatic/go-log`](https://github.com/gomatic/go-log).
 - **`exit.go`** — `ExitCode` (sentinel error → historical exit code: read=2, parse=4, execute=8, panic=15, otherwise 1).
 - **`runtime.go`** — `Runtime`, the injected IO seams and parsed arguments passed from the composition root to each command.
 
@@ -50,7 +50,7 @@ Neither domain imports urfave/cli or contains IO of its own; every filesystem an
 - **`internal/template`** — builds the function set from the Sprig v3 library overlaid with `gomatic/funcmap` (funcmap wins on name clashes; nondeterministic functions are overridden in testing mode) and parses/executes one template, recovering panics as `ErrRenderPanic`.
 - **`internal/environment`** — turns a `KEY=VALUE` listing into a map.
 - **`internal/inspect`** — walks a template's parse tree to infer its required input data model and renders it as a YAML skeleton (the `analyze` command).
-- **`internal/constants`** — the sentinel `Error` type and the errors the program can emit.
+- **`internal/constants`** — renderizer's sentinel error values, declared as constants of [`gomatic/go-error`](https://github.com/gomatic/go-error)'s `Const` type (the shared `errors.Is`-matchable mechanism).
 
 ## The cli/v3 constraint
 

@@ -1,6 +1,6 @@
 module github.com/gomatic/renderizer
 
-go 1.26.3
+go 1.26.4
 
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
@@ -18,6 +18,8 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/gomatic/clock v1.0.0
 	github.com/gomatic/funcmap v1.1.0
+	github.com/gomatic/go-error v0.2.2
+	github.com/gomatic/go-log v0.2.0
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli/v3 v3.10.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -497,12 +499,12 @@ require (
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260611141451-d61e87d5f4a3 // indirect
+	golang.org/x/telemetry v0.0.0-20260625142307-59b4966ccb57 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.46.0 // indirect
-	golang.org/x/vuln v1.4.0 // indirect
+	golang.org/x/tools v0.47.0 // indirect
+	golang.org/x/vuln v1.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.274.0 // indirect
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect

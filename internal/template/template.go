@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"maps"
-	"math/rand"
+	"math/rand/v2"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -57,11 +57,11 @@ func Funcs(testing TestingEnabled) template.FuncMap {
 	maps.Copy(funcs, funcmap.New(funcmap.WithV1Map()))
 	if testing {
 		fixed := clock.Now(clock.Format)
-		generator := rand.New(rand.NewSource(testSeed))
+		generator := rand.New(rand.NewPCG(testSeed, testSeed))
 		funcs["command_line"] = func() string { return "testing" }
 		funcs["now"] = fixed
 		funcs["started"] = fixed
-		funcs["rand"] = func() int64 { return generator.Int63() }
+		funcs["rand"] = func() int64 { return generator.Int64() }
 	}
 	return funcs
 }

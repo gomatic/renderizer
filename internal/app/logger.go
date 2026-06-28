@@ -7,6 +7,8 @@ package app
 import (
 	"io"
 	"log/slog"
+
+	"github.com/gomatic/go-log"
 )
 
 type (
@@ -16,20 +18,21 @@ type (
 	Debugging bool
 )
 
-// NewLogger builds a logger writing to w. Debug wins over verbose; with neither,
-// only warnings and errors are emitted so normal runs stay quiet.
+// NewLogger builds a logger writing to w via gomatic/go-log. Debug wins over
+// verbose; with neither, only warnings and errors are emitted so normal runs
+// stay quiet.
 func NewLogger(w io.Writer, verbose Verbose, debug Debugging) *slog.Logger {
-	return slog.New(slog.NewTextHandler(w, &slog.HandlerOptions{Level: level(verbose, debug)}))
+	return log.LoggerConfig{LogLevel: level(verbose, debug)}.NewLogger(w)
 }
 
-// level resolves the logging level from the verbosity flags.
-func level(verbose Verbose, debug Debugging) slog.Level {
+// level resolves the go-log textual level from the verbosity flags.
+func level(verbose Verbose, debug Debugging) log.Level {
 	switch {
 	case bool(debug):
-		return slog.LevelDebug
+		return "debug"
 	case bool(verbose):
-		return slog.LevelInfo
+		return "info"
 	default:
-		return slog.LevelWarn
+		return "warn"
 	}
 }

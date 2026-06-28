@@ -48,11 +48,11 @@ func assignment(token string, capitalize Capitalization, format TimeFormat) map[
 // value. A token without `=` yields an empty value, signaling a boolean.
 func splitAssignment(token string) (string, *string) {
 	body := strings.TrimLeft(token, "-")
-	parts := strings.SplitN(body, "=", 2)
-	if len(parts) == 1 {
-		return parts[0], nil
+	name, value, found := strings.Cut(body, "=")
+	if !found {
+		return name, nil
 	}
-	return parts[0], &parts[1]
+	return name, &value
 }
 
 // leaf types a present value or yields boolean true for a bare name.

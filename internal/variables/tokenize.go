@@ -42,15 +42,8 @@ func isAssignment(arg string) bool {
 	if !strings.HasPrefix(arg, "--") {
 		return false
 	}
-	key, _ := splitKey(strings.TrimPrefix(arg, "--"))
+	key, _, _ := strings.Cut(strings.TrimPrefix(arg, "--"), "=")
 	return !knownLongFlag(key)
-}
-
-// splitKey separates a flag body into its name and whether an inline `=value`
-// was present.
-func splitKey(body string) (string, bool) {
-	parts := strings.SplitN(body, "=", 2)
-	return parts[0], len(parts) == 2
 }
 
 // knownLongFlag reports whether key is one of renderizer's own long flags (or
