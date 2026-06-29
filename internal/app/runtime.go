@@ -12,8 +12,8 @@ type Runtime struct {
 	Exists      func(name string) bool
 	Getwd       func() (string, error)
 	Environ     func() []string
+	TimeFormat  string
 	Assignments []string
 	Capitalize  bool
-	TimeFormat  string
 	Piped       bool
 }

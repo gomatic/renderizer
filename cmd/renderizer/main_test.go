@@ -65,17 +65,17 @@ func TestStdinRendering(t *testing.T) {
 	tests := []struct {
 		name     string
 		template string
-		args     []string
 		want     string
+		args     []string
 	}{
-		{"simple variable", "Hello, {{.Name}}!", []string{"--stdin", "--name=World"}, "Hello, World!"},
-		{"integer value", "Count: {{.Count}}", []string{"--stdin", "--count=42"}, "Count: 42"},
-		{"boolean value", "{{if .Flag}}YES{{else}}NO{{end}}", []string{"--stdin", "--flag=true"}, "YES"},
-		{"bare boolean", "{{if .Flag}}YES{{else}}NO{{end}}", []string{"--stdin", "--flag"}, "YES"},
-		{"dotted notation", "{{.A.B.C}}", []string{"--stdin", "--a.b.c=nested"}, "nested"},
-		{"typed equality", "{{if eq .Count 42}}ok{{end}}", []string{"--stdin", "--count=42"}, "ok"},
-		{"upper function", "{{upper .Text}}", []string{"--stdin", "--text=hi"}, "HI"},
-		{"command_line in testing mode", "{{command_line}}", []string{"--stdin"}, "testing"},
+		{"simple variable", "Hello, {{.Name}}!", "Hello, World!", []string{"--stdin", "--name=World"}},
+		{"integer value", "Count: {{.Count}}", "Count: 42", []string{"--stdin", "--count=42"}},
+		{"boolean value", "{{if .Flag}}YES{{else}}NO{{end}}", "YES", []string{"--stdin", "--flag=true"}},
+		{"bare boolean", "{{if .Flag}}YES{{else}}NO{{end}}", "YES", []string{"--stdin", "--flag"}},
+		{"dotted notation", "{{.A.B.C}}", "nested", []string{"--stdin", "--a.b.c=nested"}},
+		{"typed equality", "{{if eq .Count 42}}ok{{end}}", "ok", []string{"--stdin", "--count=42"}},
+		{"upper function", "{{upper .Text}}", "HI", []string{"--stdin", "--text=hi"}},
+		{"command_line in testing mode", "{{command_line}}", "testing", []string{"--stdin"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -237,4 +237,40 @@ func TestErrorCases(t *testing.T) {
 			assert.Equal(t, tt.want, code)
 		})
 	}
+}
+
+func TestPiped(t *testing.T) {
+	regular, err := os.CreateTemp(t.TempDir(), "stdin")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = regular.Close() })
+	assert.True(t, piped(regular), "a regular file carries no char-device bit, so stdin reads as piped")
+
+	device, err := os.Open(os.DevNull)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = device.Close() })
+	assert.False(t, piped(device), "a character device is a terminal, not a pipe")
+}
+
+func TestExecute(t *testing.T) {
+	t.Setenv("RENDERIZER_TESTING", "true")
+	device, err := os.Open(os.DevNull)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = device.Close() })
+
+	var stdout, stderr bytes.Buffer
+	code := execute([]string{"renderizer", "--version"}, device, &stdout, &stderr)
+	require.Equal(t, app.ExitStatus(0), code, "stderr: %s", stderr.String())
+	assert.Contains(t, stdout.String(), "renderizer")
+}
+
+func TestMainEntry(t *testing.T) {
+	originalExit, originalArgs := osExit, os.Args
+	t.Cleanup(func() { osExit, os.Args = originalExit, originalArgs })
+
+	var code int
+	osExit = func(c int) { code = c }
+	os.Args = []string{"renderizer", "--version"}
+
+	main()
+	assert.Equal(t, 0, code)
 }

@@ -94,11 +94,11 @@ func TestRender(t *testing.T) {
 	t.Parallel()
 	funcs := template.Funcs(true)
 	tests := []struct {
+		data    any
+		wantErr error
 		name    string
 		source  string
-		data    any
 		want    string
-		wantErr error
 	}{
 		{
 			name:   "renders variable",

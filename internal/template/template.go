@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"fmt"
 	"maps"
-	"math/rand/v2"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -18,8 +17,20 @@ import (
 	"github.com/gomatic/renderizer/internal/constants"
 )
 
+// Seed initializes the deterministic testing-mode random sequence.
+type Seed uint64
+
 // testSeed seeds the deterministic random source used in testing mode.
-const testSeed = 0
+const testSeed Seed = 0
+
+// splitmix64 constants for the deterministic testing-mode sequence (see
+// https://prng.di.unimi.it/splitmix64.c): a minimal, reproducible generator
+// yielding full-range int64 values without a weak math/rand source.
+const (
+	splitMixGamma uint64 = 0x9e3779b97f4a7c15
+	splitMixMul1  uint64 = 0xbf58476d1ce4e5b9
+	splitMixMul2  uint64 = 0x94d049bb133111eb
+)
 
 type (
 	// MissingKey is the text/template "missingkey" option.
@@ -57,13 +68,27 @@ func Funcs(testing TestingEnabled) template.FuncMap {
 	maps.Copy(funcs, funcmap.New(funcmap.WithV1Map()))
 	if testing {
 		fixed := clock.Now(clock.Format)
-		generator := rand.New(rand.NewPCG(testSeed, testSeed))
+		nextRand := deterministicSequence(testSeed)
 		funcs["command_line"] = func() string { return "testing" }
 		funcs["now"] = fixed
 		funcs["started"] = fixed
-		funcs["rand"] = func() int64 { return generator.Int64() }
+		funcs["rand"] = func() int64 { return nextRand() }
 	}
 	return funcs
+}
+
+// deterministicSequence returns a closure producing a reproducible sequence of
+// int64 values from seed, replacing a nondeterministic RNG in testing mode so
+// rendered output is stable across runs.
+func deterministicSequence(seed Seed) func() int64 {
+	state := uint64(seed)
+	return func() int64 {
+		state += splitMixGamma
+		z := state
+		z = (z ^ (z >> 30)) * splitMixMul1
+		z = (z ^ (z >> 27)) * splitMixMul2
+		return int64(z ^ (z >> 31))
+	}
 }
 
 // Render parses source as a template named name with the given functions and

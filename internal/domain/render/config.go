@@ -6,25 +6,20 @@ import "io"
 // the arguments Tokenize extracted, and the injected IO seams the composition
 // root supplies. It carries no behavior.
 type Config struct {
-	// Flag-bound options.
-	Settings    SettingsFiles
-	MissingKey  MissingKeyOption
-	Environment EnvironmentName
-	Stdin       StdinEnabled
-	Testing     TestingEnabled
-	Debugging   DebuggingEnabled
-	Verbose     VerboseEnabled
-
-	// Parsed arguments and rendering options set by the composition root.
-	Capitalize  Capitalization
+	Source      io.Reader
+	Environ     EnvironFunc
+	Getwd       GetwdFunc
+	Exists      ExistsFunc
+	ReadFile    ReadFileFunc
 	TimeFormat  TimeFormat
+	Environment EnvironmentName
+	MissingKey  MissingKeyOption
+	Settings    SettingsFiles
 	Assignments AssignmentTokens
 	Templates   TemplateFiles
-
-	// Injected IO seams.
-	Source   io.Reader
-	ReadFile ReadFileFunc
-	Exists   ExistsFunc
-	Getwd    GetwdFunc
-	Environ  EnvironFunc
+	Verbose     VerboseEnabled
+	Capitalize  Capitalization
+	Debugging   DebuggingEnabled
+	Testing     TestingEnabled
+	Stdin       StdinEnabled
 }

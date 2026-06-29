@@ -19,10 +19,10 @@ func TestErrorWith(t *testing.T) {
 	t.Parallel()
 	cause := errors.New("boom")
 	tests := []struct {
-		name        string
 		err         error
-		args        []any
+		name        string
 		wantMessage string
+		args        []any
 		wantIsCause bool
 	}{
 		{

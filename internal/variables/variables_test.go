@@ -90,10 +90,10 @@ func TestTokenize(t *testing.T) {
 func TestAssignments(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
+		want       variables.Context
 		name       string
 		tokens     []string
 		capitalize variables.Capitalization
-		want       variables.Context
 	}{
 		{
 			name:       "single scalar collapses",

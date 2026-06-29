@@ -27,8 +27,8 @@ type (
 	// Field is one node of the inferred model. List marks a value reached via
 	// range (a collection); Fields holds its nested or element fields.
 	Field struct {
-		List   bool
 		Fields Fields
+		List   bool
 	}
 
 	// Model is the inferred input data model: the top-level fields a template
@@ -49,7 +49,7 @@ func Analyze(funcs template.FuncMap, name Name, source []byte) (Model, error) {
 	model := Model{Fields: Fields{}}
 	root := scope{root: model.Fields, dot: model.Fields, vars: map[string]Fields{}}
 	if parsed.Tree != nil {
-		walk(parsed.Tree.Root, root)
+		walk(parsed.Root, root)
 	}
 	return model, nil
 }

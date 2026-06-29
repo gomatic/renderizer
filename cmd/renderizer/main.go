@@ -27,10 +27,19 @@ const timeFormat = "20060102T150405"
 // appVersion is overridden at build time via -ldflags "-X main.appVersion=...".
 var appVersion = "dev"
 
-func main() {
+// osExit is indirected so a test can observe the process exit code instead of
+// terminating the test binary; it keeps main itself thin and coverable.
+var osExit = os.Exit
+
+func main() { osExit(int(execute(os.Args, os.Stdin, os.Stdout, os.Stderr))) }
+
+// execute binds the process IO seams to run: it owns the signal-cancelled
+// context (so its deferred cancel runs before the process exits) and derives
+// the piped hint from stdin. main holds no defer, keeping os.Exit honest.
+func execute(args []string, stdin *os.File, stdout, stderr io.Writer) app.ExitStatus {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer cancel()
-	os.Exit(int(run(ctx, os.Args, os.Stdin, os.Stdout, os.Stderr, piped(os.Stdin))))
+	return run(ctx, args, stdin, stdout, stderr, piped(stdin))
 }
 
 // run tokenizes the arguments, builds the root render command with the analyze

@@ -35,10 +35,10 @@ func TestLoad(t *testing.T) {
 	})
 
 	tests := []struct {
+		wantErr error
+		want    variables.Context
 		name    string
 		files   []settings.File
-		want    variables.Context
-		wantErr error
 	}{
 		{
 			name:  "single file",

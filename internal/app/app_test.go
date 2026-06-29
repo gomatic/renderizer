@@ -17,9 +17,9 @@ func TestNewLoggerLevels(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name      string
+		logAt     slog.Level
 		verbose   app.Verbose
 		debug     app.Debugging
-		logAt     slog.Level
 		wantEmpty bool
 	}{
 		{name: "default suppresses info", logAt: slog.LevelInfo, wantEmpty: true},
@@ -41,8 +41,8 @@ func TestNewLoggerLevels(t *testing.T) {
 func TestExitCode(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name string
 		err  error
+		name string
 		want app.ExitStatus
 	}{
 		{name: "success", err: nil, want: 0},
