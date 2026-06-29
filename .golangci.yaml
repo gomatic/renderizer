@@ -1,50 +1,113 @@
-# golangci-lint v2 — the single lint config for every gomatic consumer repo.
-# https://golangci-lint.run/docs/configuration/file/
+# Managed by nicerobot/tools.repository (distribute-build)
+# Default golangci-lint (v2) configuration shipped with the go-tooling image.
 #
-# It runs golangci-lint's default linters PLUS the central complexity gate
-# (gocognit/cyclop/funlen/nestif/maintidx/dupl) — folded in here so there is one
-# config and one `golangci-lint run` (via `make lint`), not a second pass over a
-# separate golangci.complexity.yaml. Tune the complexity thresholds below and
-# every repo that copies this file picks up the change.
+# Consuming repositories may override this entirely by committing their own
+# .golangci.yml / .golangci.yaml / .golangci.toml to their repo root — the
+# tools.mk `lint` target prefers a repo-local config and only falls back to
+# this file when none is present.
 version: "2"
 
 run:
   timeout: 5m
-  allow-parallel-runners: true
+  tests: true
 
 linters:
-  # golangci-lint is the central COMPLEXITY gate (its intended role here): only
-  # the complexity linters run, so `make lint` does not impose golangci-lint's
-  # broad default set (errcheck/ineffassign/unused/...) on top of the standard
-  # already enforced by the dedicated `staticcheck`, `vet` and `vulncheck` steps.
-  default: none
+  # Start from golangci-lint's curated standard set and add high-signal,
+  # well-maintained linters on top.
+  default: standard
   enable:
-    - gocognit  # cognitive complexity — how hard a function is to read
+    - bodyclose # checks HTTP response bodies are closed
+    - copyloopvar # detects redundant loop-variable copies (Go 1.22+)
+    - dupl # duplicate code detection
+    - durationcheck # catches bad time.Duration arithmetic
+    - errorlint # correct error wrapping / comparison
+    - gocognit # cognitive complexity
+    - goconst # repeated strings that should be constants
+    - gocritic # opinionated diagnostics, performance, style
+    - gocyclo # cyclomatic complexity
+    - gosec # security analyzer
+    - misspell # commonly misspelled English words
+    - nilerr # returning nil after a non-nil error
+    - nolintlint # keeps //nolint directives honest
+    - prealloc # slice preallocation opportunities
+    - predeclared # shadowing of predeclared identifiers
+    - revive # fast, configurable, drop-in golint replacement
+    - unconvert # redundant type conversions
+    - unparam # unused function parameters
+    - usestdlibvars # prefer stdlib constants over magic values
+    - wastedassign # assignments never read
   settings:
+    gocyclo:
+      min-complexity: 12
     gocognit:
-      # The gomatic Go standard caps cognitive complexity at 7: any function
-      # above it must be decomposed into named helpers or first-class functions.
-      # min-complexity is the threshold golangci REPORTS above, so 7 flags every
-      # function whose complexity exceeds 7 (i.e. 8+), matching `gocognit -over 7`.
       min-complexity: 7
+    govet:
+      enable-all: true
+    gosec:
+      excludes:
+        - G115 # integer overflow conversion noise; rely on staticcheck/manual review
+    revive:
+      # revive's standalone binary only reads TOML; configuring it here (YAML)
+      # via golangci-lint avoids a separate TOML config entirely.
+      severity: warning
+      confidence: 0.8
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: empty-block
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+        - name: if-return
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unhandled-error
+          arguments:
+            - fmt.Printf
+            - fmt.Println
+            - fmt.Print
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: var-declaration
+        - name: var-naming
   exclusions:
     generated: lax
-    # Complexity is gated on PRODUCTION code only — matching the repos' original
-    # `gocognit` gate (which ran over non-_test.go files). Test code is naturally
-    # long/repetitive (table setups, fixtures), so it is skipped.
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
+      # Test files get a lighter touch.
       - path: _test\.go
         linters:
+          - dupl
+          - gocyclo
           - gocognit
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+          - gosec
+          - goconst
 
 formatters:
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+  enable:
+    - gofumpt # stricter gofmt
+    - goimports # group/sort imports, drop unused
+    - gci # deterministic import ordering
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+    gofumpt:
+      extra-rules: true
