@@ -82,6 +82,7 @@ GOBIN := $(strip $(shell $(GO) env GOBIN))
 gobin-or-die = $(or $(GOBIN),$(error GOBIN is not set — run 'make tools' (it persists GOBIN and installs the pinned tools); the gate resolves tools from $$GOBIN only, no PATH/GOPATH fallback))
 
 GOLANGCI_LINT = $(gobin-or-die)/golangci-lint
+STICKLER      = $(gobin-or-die)/stickler
 STATICCHECK   = $(gobin-or-die)/staticcheck
 GOFUMPT       = $(gobin-or-die)/gofumpt
 GOTESTSUM     = $(gobin-or-die)/gotestsum
@@ -261,29 +262,21 @@ vet: $(VET_SUBMODULES) ## Run go vet (root module + submodules)
 $(VET_SUBMODULES): vet@%:
 	go vet -C $* ./...
 
-# golangci-lint config resolution. A repo may ship a .golangci.override.yml
-# carrying ONLY its delta (e.g. one extra gosec exclude). When present, lint
-# deep-merges it OVER the distributed .golangci.yaml — scalars overridden, arrays
-# APPENDED (yq's `*+`) — into an effective config under the git-ignored $(COVERAGE_FOLDER)/
-# and lints against that. With no override, golangci-lint auto-discovers the
-# distributed .golangci.yaml exactly as before. This keeps the centralized config
-# managed/clobberable (distribute-build owns .golangci.yaml) while letting a
-# single repo EXTEND it without an in-tree edit the next distribute would erase.
-GOLANGCI_OVERRIDE  := $(wildcard .golangci.override.yml)
-GOLANGCI_EFFECTIVE := $(COVERAGE_FOLDER)/golangci.effective.yml
-
+# Lint runs through stickler (the gomatic lint runner): it executes the configured
+# tools — golangci-lint (the complexity gate folded into .golangci.yaml) plus the
+# yze analyzer suite — to completion, normalizes their findings, and fails on any
+# finding or tool error. Per-repo lint deltas live in a hand-authored .stickler.yaml
+# `config:` overlay deep-merged onto the managed (clobberable) .golangci.yaml at run
+# time — so the centralized config stays uniform and distribute-owned while a repo
+# EXTENDS it without an in-tree edit the next distribute would erase. This replaces
+# the former yq-merged .golangci.override.yml mechanism (no yq dependency).
+# stickler shells out to golangci-lint/yze by name, so $(GOBIN) is prepended to PATH.
 .PHONY: lint-raw
 lint-raw: vet
-ifeq ($(GOLANGCI_OVERRIDE),)
-	$(GOLANGCI_LINT) run
-else
-	@mkdir -p $(COVERAGE_FOLDER)
-	yq eval-all '. as $$item ireduce ({}; . *+ $$item)' .golangci.yaml $(GOLANGCI_OVERRIDE) > $(GOLANGCI_EFFECTIVE)
-	$(GOLANGCI_LINT) run --config $(GOLANGCI_EFFECTIVE)
-endif
+	PATH="$(GOBIN):$$PATH" $(STICKLER)
 
 .PHONY: lint
-lint: ## Run golangci-lint (ratchet-aware; override-merged config if .golangci.override.yml present)
+lint: ## Run the stickler lint suite (golangci-lint + yze; ratchet-aware; .stickler.yaml-merged config)
 	@$(call standards-run,gate:lint,$(MAKE) lint-raw)
 
 .PHONY: staticcheck-raw
