@@ -24,8 +24,8 @@ import (
 
 const timeFormat = "20060102T150405"
 
-// appVersion is overridden at build time via -ldflags "-X main.appVersion=...".
-var appVersion = "dev"
+// version is overridden at build time via -ldflags "-X main.version=...".
+var version = "dev"
 
 // osExit is indirected so a test can observe the process exit code instead of
 // terminating the test binary; it keeps main itself thin and coverable.
@@ -46,7 +46,7 @@ func execute(args []string, stdin *os.File, stdout, stderr io.Writer) app.ExitSt
 // and version subcommands, runs it, and returns the resulting exit code.
 func run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.Writer, isPiped bool) app.ExitStatus {
 	// Expose the version to templates as {{.env.RENDERIZER_VERSION}}.
-	_ = os.Setenv("RENDERIZER_VERSION", appVersion)
+	_ = os.Setenv("RENDERIZER_VERSION", version)
 	tokens := variables.Tokenize(args[1:])
 	rt := app.Runtime{
 		Source:      stdin,
@@ -60,13 +60,13 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 		Piped:       isPiped,
 	}
 	root := rendercmd.Command(rt)
-	root.Version = appVersion
+	root.Version = version
 	root.EnableShellCompletion = true
 	root.Writer = stdout
 	root.ErrWriter = stderr
 	root.Commands = []*cli.Command{
 		analyzecmd.Command(rt),
-		versioncmd.Command(root.Name, appVersion),
+		versioncmd.Command(root.Name, version),
 	}
 	err := root.Run(ctx, append([]string{root.Name}, tokens.Args...))
 	return app.ExitCode(err)
