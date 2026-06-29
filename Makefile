@@ -87,6 +87,10 @@ GOFUMPT       = $(gobin-or-die)/gofumpt
 GOTESTSUM     = $(gobin-or-die)/gotestsum
 GOVULNCHECK   = $(gobin-or-die)/govulncheck
 GORELEASER    = $(gobin-or-die)/goreleaser
+GOLINES       = $(gobin-or-die)/golines
+
+# Maximum source line length enforced by golines (it shortens longer lines).
+GOLINES_MAX ?= 120
 
 # TOOLS_BUILD points at a local nicerobot/tools.build checkout so `make tools` /
 # `make doctor` can run its scripts. Defaults to the home-ecosystem clone path;
@@ -178,7 +182,7 @@ $(BUILD_DIR) $(COVERAGE_FOLDER):
 # consumers are green, so they are enforced on every push now — coverage and
 # vulnerabilities can no longer silently regress in CI.
 .PHONY: ci
-ci: standards-validate lint staticcheck vulncheck cover-gate test-all build-all ## Aggregate target for CI builds
+ci: standards-validate fmt-check lint staticcheck vulncheck cover-gate test-all build-all ## Aggregate target for CI builds
 
 # True CI parity: run the real `ci` recipe INSIDE the baked toolchain image,
 # so it uses the pinned tools and the exact base environment CI runs in — not the
@@ -237,7 +241,7 @@ standards-validate: ## Validate .standards.yaml exemptions carry reasons
 # runs `test-all` (race) and `build-all` (cross-compile). The complexity linters
 # are part of `lint` now (folded into .golangci.yaml).
 .PHONY: check
-check: standards-validate lint staticcheck vulncheck cover-gate ## Full developer gate (CI runs this + race & cross-compile)
+check: standards-validate fmt-check lint staticcheck vulncheck cover-gate ## Full developer gate (CI runs this + race & cross-compile)
 
 # cover-gate routes the coverage step through $(COVER_GATE) (default `cover`) so
 # a repo can swap the coverage policy by setting COVER_GATE in Makefile.local —
@@ -471,8 +475,14 @@ docker-buildx: build-all ## Build + push a multi-arch image manifest (needs buil
 ##@ Utilities
 
 .PHONY: fmt
-fmt: ## Format code
+fmt: ## Format code (golines then gofumpt)
+	$(GOLINES) -m $(GOLINES_MAX) -w .
 	$(GOFUMPT) -l -w .
+
+.PHONY: fmt-check
+fmt-check: ## Fail if any line exceeds GOLINES_MAX (gofumpt/imports are enforced by lint)
+	@out="$$($(GOLINES) -m $(GOLINES_MAX) -l .)"; \
+	if [ -n "$$out" ]; then echo "lines exceed $(GOLINES_MAX) cols (run 'make fmt'):"; echo "$$out"; exit 1; fi
 
 .PHONY: generate
 generate: ## Generate code
