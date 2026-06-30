@@ -230,7 +230,13 @@ func renderAll(cfg Config, data variables.Context, sources []templateSource) (Re
 }
 
 // renderOne reads and renders a single source.
-func renderOne(cfg Config, funcs map[string]any, missing template.MissingKey, data variables.Context, source templateSource) ([]byte, error) {
+func renderOne(
+	cfg Config,
+	funcs map[string]any,
+	missing template.MissingKey,
+	data variables.Context,
+	source templateSource,
+) ([]byte, error) {
 	bytes, err := read(cfg, source)
 	if err != nil {
 		return nil, err

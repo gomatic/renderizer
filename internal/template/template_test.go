@@ -47,7 +47,12 @@ func TestFuncsProduction(t *testing.T) {
 	assert.Contains(t, funcs, "command_line")
 	commandLine, ok := funcs["command_line"].(func() string)
 	require.True(t, ok)
-	assert.NotEqual(t, "testing", commandLine(), "production command_line is the real command line, not the testing stub")
+	assert.NotEqual(
+		t,
+		"testing",
+		commandLine(),
+		"production command_line is the real command line, not the testing stub",
+	)
 }
 
 func TestFuncsTestingRandIsDeterministic(t *testing.T) {

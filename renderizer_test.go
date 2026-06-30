@@ -14,7 +14,13 @@ func TestFuncs(t *testing.T) {
 }
 
 func TestRender(t *testing.T) {
-	out, err := renderizer.Render(renderizer.Funcs(), "error", "t", []byte(`Hello {{ .Name | upper }}`), map[string]any{"Name": "world"})
+	out, err := renderizer.Render(
+		renderizer.Funcs(),
+		"error",
+		"t",
+		[]byte(`Hello {{ .Name | upper }}`),
+		map[string]any{"Name": "world"},
+	)
 	if err != nil {
 		t.Fatalf("Render error: %v", err)
 	}
