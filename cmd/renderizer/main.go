@@ -19,6 +19,7 @@ import (
 	analyzecmd "github.com/gomatic/renderizer/internal/app/commands/analyze"
 	rendercmd "github.com/gomatic/renderizer/internal/app/commands/render"
 	versioncmd "github.com/gomatic/renderizer/internal/app/commands/version"
+	versiondomain "github.com/gomatic/renderizer/internal/domain/version"
 	"github.com/gomatic/renderizer/internal/variables"
 )
 
@@ -66,7 +67,7 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	root.ErrWriter = stderr
 	root.Commands = []*cli.Command{
 		analyzecmd.Command(rt),
-		versioncmd.Command(root.Name, version),
+		versioncmd.Command(versiondomain.AppName(root.Name), versiondomain.Build(version)),
 	}
 	err := root.Run(ctx, append([]string{root.Name}, tokens.Args...))
 	return app.ExitCode(err)
