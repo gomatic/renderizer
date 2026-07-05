@@ -20,9 +20,11 @@ type (
 
 // NewLogger builds a logger writing to w via gomatic/go-log. Debug wins over
 // verbose; with neither, only warnings and errors are emitted so normal runs
-// stay quiet.
-func NewLogger(w io.Writer, verbose Verbose, debug Debugging) *slog.Logger {
-	return log.LoggerConfig{LogLevel: level(verbose, debug)}.NewLogger(w)
+// stay quiet. It returns a value — slog.Logger is a copyable handle — and the
+// callers that feed a domain Run take its address, since *slog.Logger is the
+// domain seam's conventional logger type.
+func NewLogger(w io.Writer, verbose Verbose, debug Debugging) slog.Logger {
+	return *log.LoggerConfig{LogLevel: level(verbose, debug)}.NewLogger(w)
 }
 
 // level resolves the go-log textual level from the verbosity flags.

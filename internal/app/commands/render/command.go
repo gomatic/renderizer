@@ -29,7 +29,7 @@ func Command(rt app.Runtime) *cli.Command {
 		Usage: usage,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			logger := app.NewLogger(cmd.Root().ErrWriter, app.Verbose(cfg.Verbose), app.Debugging(cfg.Debugging))
-			result, err := domain.Run(ctx, logger, configured(cfg, rt, cmd))
+			result, err := domain.Run(ctx, &logger, configured(cfg, rt, cmd))
 			return app.Write(cmd.Root().Writer, result.Output, err)
 		},
 		Flags: []cli.Flag{

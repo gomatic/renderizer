@@ -37,7 +37,7 @@ func action(rt app.Runtime) cli.ActionFunc {
 			return constants.ErrMissingTemplate
 		}
 		logger := app.NewLogger(cmd.Root().ErrWriter, false, false)
-		result, err := domain.Run(ctx, logger, domain.Config{
+		result, err := domain.Run(ctx, &logger, domain.Config{
 			Template: domain.TemplateFile(file),
 			Source:   rt.Source,
 			ReadFile: domain.ReadFileFunc(rt.ReadFile),
