@@ -23,16 +23,16 @@ type (
 // stay quiet. It returns a value — slog.Logger is a copyable handle — and the
 // callers that feed a domain Run take its address, since *slog.Logger is the
 // domain seam's conventional logger type.
-func NewLogger(w io.Writer, verbose Verbose, debug Debugging) slog.Logger {
-	return *log.LoggerConfig{LogLevel: level(verbose, debug)}.NewLogger(w)
+func NewLogger(w io.Writer, isVerbose Verbose, isDebug Debugging) slog.Logger {
+	return *log.LoggerConfig{LogLevel: level(isVerbose, isDebug)}.NewLogger(w)
 }
 
 // level resolves the go-log textual level from the verbosity flags.
-func level(verbose Verbose, debug Debugging) log.Level {
+func level(isVerbose Verbose, isDebug Debugging) log.Level {
 	switch {
-	case bool(debug):
+	case bool(isDebug):
 		return "debug"
-	case bool(verbose):
+	case bool(isVerbose):
 		return "info"
 	default:
 		return "warn"

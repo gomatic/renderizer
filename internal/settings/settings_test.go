@@ -52,7 +52,7 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:  "optional missing is skipped",
-			files: []settings.File{{Path: "missing.yaml", Optional: true}},
+			files: []settings.File{{Path: "missing.yaml", IsOptional: true}},
 			want:  variables.Context{},
 		},
 		{

@@ -116,7 +116,7 @@ func rangeElement(pipe *parse.PipeNode, s scope) Fields {
 	if field == nil {
 		return Fields{}
 	}
-	field.List = true
+	field.IsList = true
 	return field.Fields
 }
 
@@ -158,23 +158,16 @@ func recordVariable(ident []string, s scope) {
 }
 
 // resolveVariable resolves a variable's leading identifier to a field set and
-// returns the remaining path. `$` is the root data; a known range/with variable
+// returns the remaining path. `$` is the root data; a bound range/with variable
 // resolves to its bound fields; anything else resolves to nil.
 func resolveVariable(ident []string, s scope) (Fields, []string) {
-	switch {
-	case ident[0] == "$":
+	if ident[0] == "$" {
 		return s.root, ident[1:]
-	case known(s.vars, ident[0]):
-		return s.vars[ident[0]], ident[1:]
-	default:
-		return nil, nil
 	}
-}
-
-// known reports whether name is a bound variable.
-func known(vars map[string]Fields, name string) bool {
-	_, ok := vars[name]
-	return ok
+	if fields, ok := s.vars[ident[0]]; ok {
+		return fields, ident[1:]
+	}
+	return nil, nil
 }
 
 // record descends path under fields, creating nodes as needed, and returns the

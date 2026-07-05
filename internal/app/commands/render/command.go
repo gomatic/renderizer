@@ -28,7 +28,11 @@ func Command(rt app.Runtime) *cli.Command {
 		Name:  name,
 		Usage: usage,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			logger := app.NewLogger(cmd.Root().ErrWriter, app.Verbose(cfg.Verbose), app.Debugging(cfg.Debugging))
+			logger := app.NewLogger(
+				cmd.Root().ErrWriter,
+				app.Verbose(cfg.VerboseEnabled),
+				app.Debugging(cfg.DebuggingEnabled),
+			)
 			result, err := domain.Run(ctx, &logger, configured(cfg, rt, cmd))
 			return app.Write(cmd.Root().Writer, result.Output, err)
 		},
@@ -60,28 +64,28 @@ func Command(rt app.Runtime) *cli.Command {
 				Name:        "stdin",
 				Aliases:     []string{"c"},
 				Usage:       "read the template from stdin",
-				Destination: (*bool)(&cfg.Stdin),
+				Destination: (*bool)(&cfg.StdinEnabled),
 			},
 			&cli.BoolFlag{
 				Name:        "testing",
 				Aliases:     []string{"T"},
 				Usage:       "make nondeterministic template functions reproducible",
 				Sources:     cli.EnvVars("RENDERIZER_TESTING"),
-				Destination: (*bool)(&cfg.Testing),
+				Destination: (*bool)(&cfg.TestingEnabled),
 			},
 			&cli.BoolFlag{
 				Name:        "debugging",
 				Aliases:     []string{"debug", "D"},
 				Usage:       "enable debug logging",
 				Sources:     cli.EnvVars("RENDERIZER_DEBUG"),
-				Destination: (*bool)(&cfg.Debugging),
+				Destination: (*bool)(&cfg.DebuggingEnabled),
 			},
 			&cli.BoolFlag{
 				Name:        "verbose",
 				Aliases:     []string{"V"},
 				Usage:       "enable verbose logging",
 				Sources:     cli.EnvVars("RENDERIZER_VERBOSE"),
-				Destination: (*bool)(&cfg.Verbose),
+				Destination: (*bool)(&cfg.VerboseEnabled),
 			},
 		},
 	}
@@ -93,13 +97,13 @@ func Command(rt app.Runtime) *cli.Command {
 func configured(cfg domain.Config, rt app.Runtime, cmd *cli.Command) domain.Config {
 	cfg.Templates = domain.TemplateFiles(cmd.Args().Slice())
 	cfg.Assignments = domain.AssignmentTokens(rt.Assignments)
-	cfg.Capitalize = domain.Capitalization(rt.Capitalize)
+	cfg.CapitalizeEnabled = domain.Capitalization(rt.CapitalizeEnabled)
 	cfg.TimeFormat = domain.TimeFormat(rt.TimeFormat)
 	cfg.Source = rt.Source
 	cfg.ReadFile = domain.ReadFileFunc(rt.ReadFile)
 	cfg.Exists = domain.ExistsFunc(rt.Exists)
 	cfg.Getwd = domain.GetwdFunc(rt.Getwd)
 	cfg.Environ = domain.EnvironFunc(rt.Environ)
-	cfg.Stdin = cfg.Stdin || domain.StdinEnabled(rt.Piped)
+	cfg.StdinEnabled = cfg.StdinEnabled || domain.StdinEnabled(rt.IsPiped)
 	return cfg
 }

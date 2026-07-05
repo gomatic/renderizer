@@ -24,7 +24,7 @@ func exec(t *testing.T, stdin string, isPiped bool, args ...string) (string, str
 		context.Background(),
 		append([]string{"renderizer"}, args...),
 		strings.NewReader(stdin),
-		&stdout, &stderr, isPiped,
+		&stdout, &stderr, app.PipedInput(isPiped),
 	)
 	return stdout.String(), stderr.String(), code
 }
@@ -243,12 +243,12 @@ func TestPiped(t *testing.T) {
 	regular, err := os.CreateTemp(t.TempDir(), "stdin")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = regular.Close() })
-	assert.True(t, piped(regular), "a regular file carries no char-device bit, so stdin reads as piped")
+	assert.True(t, bool(piped(regular)), "a regular file carries no char-device bit, so stdin reads as piped")
 
 	device, err := os.Open(os.DevNull)
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = device.Close() })
-	assert.False(t, piped(device), "a character device is a terminal, not a pipe")
+	assert.False(t, bool(piped(device)), "a character device is a terminal, not a pipe")
 }
 
 func TestExecute(t *testing.T) {

@@ -45,20 +45,30 @@ func execute(args []string, stdin *os.File, stdout, stderr io.Writer) app.ExitSt
 
 // run tokenizes the arguments, builds the root render command with the analyze
 // and version subcommands, runs it, and returns the resulting exit code.
-func run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.Writer, isPiped bool) app.ExitStatus {
+func run(
+	ctx context.Context,
+	args []string,
+	stdin io.Reader,
+	stdout, stderr io.Writer,
+	isPiped app.PipedInput,
+) app.ExitStatus {
 	// Expose the version to templates as {{.env.RENDERIZER_VERSION}}.
 	_ = os.Setenv("RENDERIZER_VERSION", version)
 	tokens := variables.Tokenize(args[1:])
 	rt := app.Runtime{
-		Source:      stdin,
-		ReadFile:    os.ReadFile,
-		Exists:      exists,
-		Getwd:       os.Getwd,
-		Environ:     os.Environ,
-		Assignments: tokens.Assignments,
-		Capitalize:  true,
-		TimeFormat:  timeFormat,
-		Piped:       isPiped,
+		Source:   stdin,
+		ReadFile: os.ReadFile,
+		// Exists reports whether a path exists, for default-template discovery.
+		Exists: func(name string) bool {
+			_, err := os.Stat(name)
+			return err == nil
+		},
+		Getwd:             os.Getwd,
+		Environ:           os.Environ,
+		Assignments:       tokens.Assignments,
+		CapitalizeEnabled: true,
+		TimeFormat:        timeFormat,
+		IsPiped:           isPiped,
 	}
 	root := rendercmd.Command(rt)
 	root.Version = version
@@ -73,15 +83,9 @@ func run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	return app.ExitCode(err)
 }
 
-// exists reports whether a path exists, for default-template discovery.
-func exists(name string) bool {
-	_, err := os.Stat(name)
-	return err == nil
-}
-
 // piped reports whether f is a pipe rather than a terminal, so stdin is used
 // automatically for `… | renderizer`.
-func piped(f *os.File) bool {
+func piped(f *os.File) app.PipedInput {
 	info, err := f.Stat()
-	return err == nil && info.Mode()&os.ModeCharDevice == 0
+	return app.PipedInput(err == nil && info.Mode()&os.ModeCharDevice == 0)
 }

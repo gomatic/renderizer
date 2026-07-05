@@ -20,8 +20,8 @@ type ReadFile func(name string) ([]byte, error)
 // skipped rather than failing — this is how the implicit default settings file
 // stays optional.
 type File struct {
-	Path     string
-	Optional bool
+	Path       string
+	IsOptional bool
 }
 
 // Load reads each file in order, parses and retypes its YAML, and merges the
@@ -45,7 +45,7 @@ func Load(read ReadFile, files []File, format variables.TimeFormat) (variables.C
 func loadFile(read ReadFile, file File, format variables.TimeFormat) (map[string]any, error) {
 	data, err := read(file.Path)
 	if err != nil {
-		if file.Optional {
+		if file.IsOptional {
 			return nil, nil
 		}
 		return nil, constants.ErrReadSettings.With(err, file.Path)

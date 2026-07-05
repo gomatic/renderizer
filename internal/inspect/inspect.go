@@ -24,11 +24,11 @@ type (
 	// Fields maps a field name to its inferred sub-model.
 	Fields map[string]*Field
 
-	// Field is one node of the inferred model. List marks a value reached via
+	// Field is one node of the inferred model. IsList marks a value reached via
 	// range (a collection); Fields holds its nested or element fields.
 	Field struct {
 		Fields Fields
-		List   bool
+		IsList bool
 	}
 
 	// Model is the inferred input data model: the top-level fields a template
@@ -82,7 +82,7 @@ func build(fields Fields) any {
 // one-element slice.
 func value(field Field) any {
 	inner := build(field.Fields)
-	if field.List {
+	if field.IsList {
 		return []any{inner}
 	}
 	return inner

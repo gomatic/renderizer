@@ -26,13 +26,13 @@ func mapReadFile(files map[string]string) func(string) ([]byte, error) {
 
 func baseRuntime(source string) app.Runtime {
 	return app.Runtime{
-		Source:     strings.NewReader(source),
-		ReadFile:   func(string) ([]byte, error) { return nil, os.ErrNotExist },
-		Exists:     func(string) bool { return false },
-		Getwd:      func() (string, error) { return "/work", nil },
-		Environ:    func() []string { return []string{"HOME=/home"} },
-		Capitalize: true,
-		TimeFormat: "20060102T150405",
+		Source:            strings.NewReader(source),
+		ReadFile:          func(string) ([]byte, error) { return nil, os.ErrNotExist },
+		Exists:            func(string) bool { return false },
+		Getwd:             func() (string, error) { return "/work", nil },
+		Environ:           func() []string { return []string{"HOME=/home"} },
+		CapitalizeEnabled: true,
+		TimeFormat:        "20060102T150405",
 	}
 }
 
@@ -67,7 +67,7 @@ func TestRenderTemplateFile(t *testing.T) {
 
 func TestRenderPipedStdinWithoutFlag(t *testing.T) {
 	rt := baseRuntime("Hi {{.Name}}")
-	rt.Piped = true
+	rt.IsPiped = true
 	rt.Assignments = []string{"--name=Zed"}
 	out, err := exec(t, rt)
 	require.NoError(t, err)

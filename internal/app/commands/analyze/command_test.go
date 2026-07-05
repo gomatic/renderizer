@@ -37,7 +37,7 @@ func TestAnalyzeFile(t *testing.T) {
 }
 
 func TestAnalyzeStdin(t *testing.T) {
-	rt := app.Runtime{Source: strings.NewReader("{{.Greeting}}"), Piped: true}
+	rt := app.Runtime{Source: strings.NewReader("{{.Greeting}}"), IsPiped: true}
 	out, err := exec(t, rt)
 	require.NoError(t, err)
 	assert.Contains(t, out, "Greeting: \"\"")

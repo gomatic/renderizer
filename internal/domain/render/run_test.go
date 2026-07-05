@@ -51,14 +51,14 @@ func (errReader) Read([]byte) (int, error) { return 0, errors.New("read boom") }
 // the fields they exercise.
 func baseConfig() render.Config {
 	return render.Config{
-		Environment: "env",
-		MissingKey:  "error",
-		Capitalize:  true,
-		TimeFormat:  "20060102T150405",
-		ReadFile:    func(string) ([]byte, error) { return nil, os.ErrNotExist },
-		Exists:      func(string) bool { return false },
-		Getwd:       func() (string, error) { return "/work/dir", nil },
-		Environ:     func() []string { return []string{"HOME=/home", "USER=alice"} },
+		Environment:       "env",
+		MissingKey:        "error",
+		CapitalizeEnabled: true,
+		TimeFormat:        "20060102T150405",
+		ReadFile:          func(string) ([]byte, error) { return nil, os.ErrNotExist },
+		Exists:            func(string) bool { return false },
+		Getwd:             func() (string, error) { return "/work/dir", nil },
+		Environ:           func() []string { return []string{"HOME=/home", "USER=alice"} },
 	}
 }
 
@@ -70,7 +70,7 @@ func run(t *testing.T, cfg render.Config) (render.Result, error) {
 func TestRunStdin(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Stdin = true
+	cfg.StdinEnabled = true
 	cfg.Source = strings.NewReader("Hello, {{.Name}}!")
 	cfg.Assignments = render.AssignmentTokens{"--name=World"}
 
@@ -82,9 +82,9 @@ func TestRunStdin(t *testing.T) {
 func TestRunVerboseAndDebugLogging(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Verbose = true
-	cfg.Debugging = true
-	cfg.Stdin = true
+	cfg.VerboseEnabled = true
+	cfg.DebuggingEnabled = true
+	cfg.StdinEnabled = true
 	cfg.Source = strings.NewReader("{{.Name}}")
 	cfg.Assignments = render.AssignmentTokens{"--name=X"}
 
@@ -96,7 +96,7 @@ func TestRunVerboseAndDebugLogging(t *testing.T) {
 func TestRunStdinEnvironment(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Stdin = true
+	cfg.StdinEnabled = true
 	cfg.Source = strings.NewReader("{{.env.USER}}")
 
 	result, err := run(t, cfg)
@@ -194,7 +194,7 @@ func TestRunGetwdError(t *testing.T) {
 func TestRunAssignmentsError(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Stdin = true
+	cfg.StdinEnabled = true
 	cfg.Source = strings.NewReader("x")
 	cfg.Assignments = render.AssignmentTokens{"--a.b=2", "--a=1"}
 
@@ -205,7 +205,7 @@ func TestRunAssignmentsError(t *testing.T) {
 func TestRunSettingsParseError(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Stdin = true
+	cfg.StdinEnabled = true
 	cfg.Source = strings.NewReader("x")
 	cfg.Settings = render.SettingsFiles{"bad.yaml"}
 	cfg.ReadFile = mapReadFile(map[string]string{"bad.yaml": "::: not yaml :::"})
@@ -217,7 +217,7 @@ func TestRunSettingsParseError(t *testing.T) {
 func TestRunSettingsDeepMerge(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Capitalize = false // so CLI key "a" matches the settings key
+	cfg.CapitalizeEnabled = false // so CLI key "a" matches the settings key
 	cfg.Settings = render.SettingsFiles{"s.yaml"}
 	cfg.Templates = render.TemplateFiles{"t.tmpl"}
 	cfg.ReadFile = mapReadFile(map[string]string{
@@ -234,7 +234,7 @@ func TestRunSettingsDeepMerge(t *testing.T) {
 func TestRunStdinReadError(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Stdin = true
+	cfg.StdinEnabled = true
 	cfg.Source = errReader{}
 
 	_, err := run(t, cfg)
@@ -253,7 +253,7 @@ func TestRunFileOpenError(t *testing.T) {
 func TestRunParseError(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Stdin = true
+	cfg.StdinEnabled = true
 	cfg.Source = strings.NewReader("{{.Unclosed")
 
 	_, err := run(t, cfg)
@@ -263,7 +263,7 @@ func TestRunParseError(t *testing.T) {
 func TestRunExecuteError(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
-	cfg.Stdin = true
+	cfg.StdinEnabled = true
 	cfg.Source = strings.NewReader("{{.Missing}}")
 
 	_, err := run(t, cfg)

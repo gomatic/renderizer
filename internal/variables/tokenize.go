@@ -16,6 +16,13 @@ type Tokens struct {
 	Assignments []string
 }
 
+type (
+	// argument is one raw command-line argument under classification.
+	argument string
+	// flagName is a long flag's name, dashes and value stripped.
+	flagName string
+)
+
 // Tokenize splits args (excluding the program name) into urfave/cli arguments
 // and arbitrary variable assignments. Only long `--name[=value]` flags that are
 // not renderizer's own, plus the positional `-C` toggle, are treated as
@@ -24,7 +31,7 @@ type Tokens struct {
 func Tokenize(args []string) Tokens {
 	tokens := Tokens{}
 	for _, arg := range args {
-		if isAssignment(arg) {
+		if isAssignment(argument(arg)) {
 			tokens.Assignments = append(tokens.Assignments, arg)
 			continue
 		}
@@ -35,20 +42,20 @@ func Tokenize(args []string) Tokens {
 
 // isAssignment reports whether arg is an arbitrary variable assignment: the -C
 // toggle, or a long flag whose name is not one of renderizer's own.
-func isAssignment(arg string) bool {
-	if arg == capitalizeToggle {
+func isAssignment(arg argument) bool {
+	if string(arg) == capitalizeToggle {
 		return true
 	}
-	if !strings.HasPrefix(arg, "--") {
+	if !strings.HasPrefix(string(arg), "--") {
 		return false
 	}
-	key, _, _ := strings.Cut(strings.TrimPrefix(arg, "--"), "=")
-	return !knownLongFlag(key)
+	key, _, _ := strings.Cut(strings.TrimPrefix(string(arg), "--"), "=")
+	return !knownLongFlag(flagName(key))
 }
 
 // knownLongFlag reports whether key is one of renderizer's own long flags (or
 // long aliases), which must reach urfave/cli rather than become a variable.
-func knownLongFlag(key string) bool {
+func knownLongFlag(key flagName) bool {
 	switch key {
 	case "settings", "missing", "environment", "env",
 		"stdin", "testing", "debugging", "debug", "verbose", "help", "version":

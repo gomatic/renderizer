@@ -144,7 +144,7 @@ func TestAnalyzeListFlag(t *testing.T) {
 	require.NoError(t, err)
 	items := model.Fields["Items"]
 	require.NotNil(t, items)
-	assert.True(t, items.List)
+	assert.True(t, items.IsList)
 	assert.Contains(t, items.Fields, "Name")
 }
 

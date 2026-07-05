@@ -33,7 +33,7 @@ func Command(rt app.Runtime) *cli.Command {
 func action(rt app.Runtime) cli.ActionFunc {
 	return func(ctx context.Context, cmd *cli.Command) error {
 		file := firstArg(cmd.Args().Slice())
-		if file == "" && !rt.Piped {
+		if file == "" && !rt.IsPiped {
 			return constants.ErrMissingTemplate
 		}
 		logger := app.NewLogger(cmd.Root().ErrWriter, false, false)

@@ -60,13 +60,13 @@ func NormalizeMissingKey(key MissingKey) MissingKey {
 // funcmap's own functions. funcmap is overlaid last so it wins on a name clash:
 // existing templates keep funcmap's signatures (e.g. the two-argument trim and
 // the reversed-argument sub/div/mod) while Sprig v3 supplies everything funcmap
-// does not define. In testing mode the nondeterministic functions
+// does not define. In isTesting mode the nondeterministic functions
 // (command_line, now, started, rand) are overridden so output is reproducible.
-func Funcs(testing TestingEnabled) template.FuncMap {
+func Funcs(isTesting TestingEnabled) template.FuncMap {
 	funcs := template.FuncMap{}
 	maps.Copy(funcs, sprig.TxtFuncMap())
 	maps.Copy(funcs, funcmap.New(funcmap.WithV1Map()))
-	if testing {
+	if isTesting {
 		fixed := clock.Now(clock.Format)
 		nextRand := deterministicSequence(testSeed)
 		funcs["command_line"] = func() string { return "testing" }

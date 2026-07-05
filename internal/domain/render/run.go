@@ -47,10 +47,10 @@ func Run(_ context.Context, logger *slog.Logger, cfg Config) (Result, error) {
 // requested.
 func logResolution(logger *slog.Logger, cfg Config, data variables.Context, sources []templateSource) {
 	logger.Debug("Rendering templates.", "count", len(sources))
-	if bool(cfg.Verbose) {
+	if bool(cfg.VerboseEnabled) {
 		logger.Info("Resolved templates.", "templates", sourceNames(sources))
 	}
-	if bool(cfg.Debugging) {
+	if bool(cfg.DebuggingEnabled) {
 		logger.Debug("Template context.", "data", dump(data))
 	}
 }
@@ -76,7 +76,7 @@ func dump(data variables.Context) string {
 // environment map.
 func buildContext(cfg Config) (variables.Context, error) {
 	format := variables.TimeFormat(cfg.TimeFormat)
-	data, err := variables.Assignments(cfg.Assignments, variables.Capitalization(cfg.Capitalize), format)
+	data, err := variables.Assignments(cfg.Assignments, variables.Capitalization(cfg.CapitalizeEnabled), format)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func addEnvironment(cfg Config, data variables.Context) {
 // default when none were given.
 func settingsFiles(cfg Config) []settings.File {
 	if len(cfg.Settings) == 0 {
-		return []settings.File{{Path: "." + mainName(cfg) + ".yaml", Optional: true}}
+		return []settings.File{{Path: "." + mainName(cfg) + ".yaml", IsOptional: true}}
 	}
 	files := make([]settings.File, len(cfg.Settings))
 	for i, path := range cfg.Settings {
@@ -150,8 +150,8 @@ func mainName(cfg Config) string {
 // templateSource names a single render input: an explicit/discovered file, or
 // stdin.
 type templateSource struct {
-	name  string
-	stdin bool
+	name    string
+	isStdin bool
 }
 
 // resolveSources decides what to render: explicit templates, stdin, a
@@ -160,8 +160,8 @@ func resolveSources(cfg Config) ([]templateSource, error) {
 	if len(cfg.Templates) > 0 {
 		return fileSources(cfg.Templates), nil
 	}
-	if bool(cfg.Stdin) {
-		return []templateSource{{name: "stdin", stdin: true}}, nil
+	if bool(cfg.StdinEnabled) {
+		return []templateSource{{name: "stdin", isStdin: true}}, nil
 	}
 	if name, ok := discover(cfg); ok {
 		return []templateSource{{name: name}}, nil
@@ -190,18 +190,22 @@ func discover(cfg Config) (string, bool) {
 	return "", false
 }
 
+// baseName is a default-discovery base file name (the working directory name
+// or the tool's fallback), tried against each candidate extension.
+type baseName string
+
 // bases returns the base names tried during discovery: the working directory
 // name (when available) and the fallback.
-func bases(getwd GetwdFunc) []string {
+func bases(getwd GetwdFunc) []baseName {
 	if dir, err := getwd(); err == nil {
-		return []string{filepath.Base(dir), defaultBase}
+		return []baseName{baseName(filepath.Base(dir)), defaultBase}
 	}
-	return []string{defaultBase}
+	return []baseName{defaultBase}
 }
 
 // candidates enumerates the file names tried for a base name, matching the
 // historical discovery order (type extension × optional .tmpl suffix).
-func candidates(base string) []string {
+func candidates(base baseName) []string {
 	suffixes := []string{".tmpl", ""}
 	types := []string{"yaml", "json", "html", "txt", "xml", ""}
 	names := make([]string, 0, len(suffixes)*len(types))
@@ -216,7 +220,7 @@ func candidates(base string) []string {
 // renderAll renders every source against data and concatenates the output,
 // terminating each rendered block with a newline as the historical tool did.
 func renderAll(cfg Config, data variables.Context, sources []templateSource) (Result, error) {
-	funcs := template.Funcs(template.TestingEnabled(cfg.Testing))
+	funcs := template.Funcs(template.TestingEnabled(cfg.TestingEnabled))
 	missing := template.NormalizeMissingKey(template.MissingKey(cfg.MissingKey))
 	var output []byte
 	for _, source := range sources {
@@ -246,7 +250,7 @@ func renderOne(
 
 // read returns the bytes of a source: stdin or a file via the injected reader.
 func read(cfg Config, source templateSource) ([]byte, error) {
-	if source.stdin {
+	if source.isStdin {
 		data, err := io.ReadAll(cfg.Source)
 		if err != nil {
 			return nil, constants.ErrReadTemplate.With(err)
