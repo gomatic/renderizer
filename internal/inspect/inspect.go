@@ -73,14 +73,14 @@ func build(fields Fields) any {
 	}
 	placeholder := make(map[string]any, len(fields))
 	for name, field := range fields {
-		placeholder[name] = value(field)
+		placeholder[name] = value(*field)
 	}
 	return placeholder
 }
 
 // value turns a single field into its placeholder, wrapping list fields in a
 // one-element slice.
-func value(field *Field) any {
+func value(field Field) any {
 	inner := build(field.Fields)
 	if field.List {
 		return []any{inner}

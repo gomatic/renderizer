@@ -44,23 +44,27 @@ func assignment(token string, capitalize Capitalization, format TimeFormat) map[
 	return nest(path, []any{leaf(value, format)})
 }
 
+// rawValue is one assignment's raw value: its text and whether the token
+// carried a value at all — a bare `--name` has none, signaling a boolean.
+type rawValue struct {
+	text  string
+	isSet bool
+}
+
 // splitAssignment strips leading dashes and separates name from an optional
-// value. A token without `=` yields an empty value, signaling a boolean.
-func splitAssignment(token string) (string, *string) {
+// value. A token without `=` yields an unset value, signaling a boolean.
+func splitAssignment(token string) (string, rawValue) {
 	body := strings.TrimLeft(token, "-")
 	name, value, found := strings.Cut(body, "=")
-	if !found {
-		return name, nil
-	}
-	return name, &value
+	return name, rawValue{text: value, isSet: found}
 }
 
 // leaf types a present value or yields boolean true for a bare name.
-func leaf(value *string, format TimeFormat) any {
-	if value == nil {
+func leaf(value rawValue, format TimeFormat) any {
+	if !value.isSet {
 		return true
 	}
-	return typed(format, *value)
+	return typed(format, value.text)
 }
 
 // casedPath splits a dotted name into segments, title-casing each when
