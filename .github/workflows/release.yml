@@ -1,24 +1,23 @@
-name: Release
-
+# Managed by nicerobot/tools.repository (distribute-build)
+name: release
 on:
   push:
-    tags: ["v*"]
-
+    branches: [main]
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 permissions:
   contents: write
-
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
+      # Full history + tags so the SemVer computation sees every prior tag; default
+      # persist-credentials (true) is REQUIRED here — this job pushes the new tag.
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0   # full history + tags for the goreleaser changelog
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.26"
-          check-latest: true
-          cache: true
-      - run: make release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      # Opt out per repo by committing a `.no-autorelease` file to the root: the
+      # action detects it and no-ops, so re-distribution can't silently re-enable it.
+      - uses: nicerobot/tools.build/tag@v2
