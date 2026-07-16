@@ -164,6 +164,13 @@ COVER_MODE      ?= atomic
 COVER_THRESHOLD ?= 100.0%
 COVERPKG        ?= $(subst $(space),$(comma),$(strip $(COVER_PKGS)))
 
+# VET_PKGS is the package set `go vet` runs over — default ./..., narrowed in a
+# repo's Makefile.local ONLY to drop COMMITTED GENERATED trees whose
+# machine-authored lines trip vet (e.g. an ANTLR parser's deliberate
+# `goto errorExit` unreachable trick), matching the COVER_PKGS narrowing:
+#   VET_PKGS = $(shell go list ./... | grep -v /src/grammar)
+VET_PKGS        ?= ./...
+
 # COVER_GATE names the target that `check`/`ci` run to enforce coverage. The
 # default is the flat aggregate `cover` gate above. A repo with a different
 # policy (e.g. a per-package ratchet with auditable per-function exceptions)
@@ -262,7 +269,7 @@ cover-gate: ## Run the active coverage gate (COVER_GATE, default `cover`), ratch
 VET_SUBMODULES := $(addprefix vet@,$(SUBMODULES))
 .PHONY: vet $(VET_SUBMODULES)
 vet: $(VET_SUBMODULES) ## Run go vet (root module + submodules)
-	go vet ./...
+	go vet $(VET_PKGS)
 $(VET_SUBMODULES): vet@%:
 	go vet -C $* ./...
 
