@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-name=$(basename ${PWD})
+name=$(basename "${PWD}")
 renderizer
-renderizer ${name}.txt.tmpl
+renderizer "${name}.txt.tmpl"
