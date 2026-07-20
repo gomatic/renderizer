@@ -90,6 +90,14 @@ GOVULNCHECK   = $(gobin-or-die)/govulncheck
 GORELEASER    = $(gobin-or-die)/goreleaser
 GOLINES       = $(gobin-or-die)/golines
 
+# yq is the one tool consulted at PARSE time (EXEMPT and BINARIES below expand
+# during Makefile read), where gobin-or-die would abort even `make help` on a
+# GOBIN-less machine — so it resolves to $(GOBIN)/yq when GOBIN is set and only
+# then falls back to a bare `yq`. Its parse-time consumers fail CLOSED on their
+# own: EXEMPT captures a sentinel the ratchet turns into a hard error (see the
+# standards section) rather than silently running with an empty ledger.
+YQ = $(if $(GOBIN),$(GOBIN)/yq,yq)
+
 # Maximum source line length enforced by golines (it shortens longer lines).
 GOLINES_MAX ?= 120
 
@@ -114,6 +122,7 @@ tools-version: ## Print the version of every pinned tool (from ${GOBIN})
 	$(GOFUMPT) --version
 	$(GOTESTSUM) --version
 	$(GORELEASER) --version
+	$(YQ) --version
 
 # --------------------------------------------------------------------------- #
 # Consumer configuration (derived; override on the command line if ever needed)
@@ -129,7 +138,7 @@ tools-version: ## Print the version of every pinned tool (from ${GOBIN})
 # so a literal id passes through and a `{{ .ProjectName }}` id resolves to the
 # project name. One yq call, no shell loop.
 GORELEASER_CONFIG ?= $(firstword $(wildcard .goreleaser.yaml .goreleaser.yml))
-BINARIES ?= $(shell test -n '$(GORELEASER_CONFIG)' && yq '.project_name as $$pn | .builds[] | select(.skip != true) | .id // $$pn | sub("\{\{.*\}\}", $$pn)' '$(GORELEASER_CONFIG)' 2>/dev/null)
+BINARIES ?= $(shell test -n '$(GORELEASER_CONFIG)' && $(YQ) '.project_name as $$pn | .builds[] | select(.skip != true) | .id // $$pn | sub("\{\{.*\}\}", $$pn)' '$(GORELEASER_CONFIG)' 2>/dev/null)
 
 # SUBMODULES: nested modules (own go.mod), excluding vendored/test-fixture mods,
 # Terraform-downloaded module sources under .terraform/, and anything beneath a
@@ -170,6 +179,13 @@ COVERPKG        ?= $(subst $(space),$(comma),$(strip $(COVER_PKGS)))
 # `goto errorExit` unreachable trick), matching the COVER_PKGS narrowing:
 #   VET_PKGS = $(shell go list ./... | grep -v /src/grammar)
 VET_PKGS        ?= ./...
+
+# STATICCHECK_PKGS is the package set staticcheck runs over — default ./...,
+# narrowed in a repo's Makefile.local for the same reason and to the same set as
+# VET_PKGS: staticcheck still reports some checks (e.g. SA4006) inside COMMITTED
+# GENERATED trees despite their `Code generated` markers.
+#   STATICCHECK_PKGS = $(shell go list ./... | grep -v /src/grammar)
+STATICCHECK_PKGS ?= ./...
 
 # COVER_GATE names the target that `check`/`ci` run to enforce coverage. The
 # default is the flat aggregate `cover` gate above. A repo with a different
@@ -230,12 +246,20 @@ ci-local: ## Run the CI aggregate inside the baked image, exactly as CI does
 #   - exempt AND step PASSES -> the exemption is STALE; fail so it gets removed.
 # Exemptions can only shrink. With no .standards.yaml, EXEMPT is empty and every
 # step behaves exactly as before — zero change for the common case.
+#
+# The ledger read fails CLOSED: when the file exists but $(YQ) cannot read it
+# (tool missing, parse error), EXEMPT captures the __EXEMPT_UNREADABLE__ sentinel
+# instead of coming up empty, and standards-run refuses to run any gate. A
+# silently-empty EXEMPT would un-ratchet every declared gap — exempt gates fail
+# hard and stale exemptions go undetected. (This shipped once: the CI image
+# lacked yq, `2>/dev/null` ate the error, and every .standards.yaml repo's
+# declared backlog failed the gate in CI while passing locally.)
 STANDARDS_FILE ?= .standards.yaml
-EXEMPT := $(if $(wildcard $(STANDARDS_FILE)),$(shell yq -r '.exempt // {} | keys | .[]' $(STANDARDS_FILE) 2>/dev/null))
+EXEMPT := $(if $(wildcard $(STANDARDS_FILE)),$(shell $(YQ) -r '.exempt // {} | keys | .[]' $(STANDARDS_FILE) 2>/dev/null || echo __EXEMPT_UNREADABLE__))
 
 # $(call standards-run,<capability>,<command>) — see the ratchet table above.
 define standards-run
-$(if $(filter $(1),$(EXEMPT)),if $(2); then echo "STANDARDS: stale exemption '$(1)' now PASSES — remove it from $(STANDARDS_FILE)" >&2; exit 1; else echo "STANDARDS: '$(1)' exempt (declared gap, not enforced)" >&2; fi,$(2))
+$(if $(filter __EXEMPT_UNREADABLE__,$(EXEMPT)),echo "STANDARDS: cannot read $(STANDARDS_FILE) with $(YQ) — install the pinned toolset ('make tools'); refusing to run with the exemption ledger unread" >&2; exit 1,$(if $(filter $(1),$(EXEMPT)),if $(2); then echo "STANDARDS: stale exemption '$(1)' now PASSES — remove it from $(STANDARDS_FILE)" >&2; exit 1; else echo "STANDARDS: '$(1)' exempt (declared gap, not enforced)" >&2; fi,$(2)))
 endef
 
 # standards-validate: every exemption must carry a non-empty reason string. (Full
@@ -244,7 +268,7 @@ endef
 .PHONY: standards-validate
 standards-validate: ## Validate .standards.yaml exemptions carry reasons
 	@test -f $(STANDARDS_FILE) || exit 0; \
-	bad=$$(yq -r '.exempt // {} | to_entries | map(select(.value == null or .value == "")) | .[].key' $(STANDARDS_FILE) 2>/dev/null); \
+	bad=$$($(YQ) -r '.exempt // {} | to_entries | map(select(.value == null or .value == "")) | .[].key' $(STANDARDS_FILE)) || { echo "STANDARDS: cannot read $(STANDARDS_FILE) with $(YQ) — install the pinned toolset ('make tools')" >&2; exit 1; }; \
 	test -z "$${bad}" || { echo "STANDARDS: exemptions missing a reason: $${bad}" >&2; exit 1; }
 
 # `check` is the comprehensive DEVELOPER gate: run it locally before pushing. It
@@ -292,7 +316,7 @@ lint: ## Run the stickler lint suite (golangci-lint + yze; ratchet-aware; .stick
 
 .PHONY: staticcheck-raw
 staticcheck-raw:
-	$(STATICCHECK) ./...
+	$(STATICCHECK) $(STATICCHECK_PKGS)
 
 .PHONY: staticcheck
 staticcheck: ## Run staticcheck (ratchet-aware)
