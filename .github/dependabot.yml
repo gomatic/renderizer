@@ -1,0 +1,58 @@
+# Managed by nicerobot/tools.repository (distribute-build)
+version: 2
+
+# Version updates for a Go repo. Security updates are governed separately by the
+# org's code-security configuration and need no entry here; this file only asks
+# Dependabot to keep dependencies current in the absence of an advisory.
+#
+# Major bumps are ignored deliberately. Fleet policy merges patch and minor
+# automatically (nicerobot/tools.admin `radm dependabot-sweep`, gated on a green
+# build) and reserves majors for human review, so opening major version-update
+# pull requests would only accumulate noise nothing is allowed to merge.
+#
+# The ignore applies to *version* updates only. A security advisory whose fix
+# exists solely across a major boundary still opens a pull request, because
+# suppressing that would leave the repo silently vulnerable.
+updates:
+  - package-ecosystem: gomod
+    # "/" and "/*" mirror distribute's own detection rule, which earns a repo its
+    # primary type when the manifest sits at the root OR one level down. A repo
+    # whose manifest lives in a subdirectory (nicerobot.github.io keeps its go.mod
+    # in year/) would otherwise get a config pointing at a directory holding no
+    # manifest, and every update job would fail.
+    directories:
+      - "/"
+      - "/*"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      go-modules:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
