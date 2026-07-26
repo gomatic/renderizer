@@ -12,6 +12,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+      bumped: ${{ steps.tag.outputs.bumped }}
     steps:
       # Full history + tags so the SemVer computation sees every prior tag; default
       # persist-credentials (true) is REQUIRED here — this job pushes the new tag.
@@ -20,4 +23,50 @@ jobs:
           fetch-depth: 0
       # Opt out per repo by committing a `.no-autorelease` file to the root: the
       # action detects it and no-ops, so re-distribution can't silently re-enable it.
-      - uses: nicerobot/tools.build/tag@v2
+      - id: tag
+        uses: nicerobot/tools.build/tag@v2
+
+  # Publishing the tag's artifacts. Without this the tag job mints a version that
+  # nothing ever builds: binaries are never attached to the release and, for a
+  # repo whose goreleaser config has a `dockers:` stanza, the published image
+  # silently keeps serving whatever was last pushed by hand. A repo consumed as a
+  # GitHub Action then runs stale code indefinitely while its source looks current.
+  #
+  # Gated on a real bump and on the repo actually having a goreleaser config, so a
+  # library with nothing to publish skips cleanly rather than failing.
+  publish:
+    needs: release
+    if: >-
+      needs.release.outputs.bumped == 'true' &&
+      hashFiles('.goreleaser.yml', '.goreleaser.yaml') != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      # Check out the tag, not the branch: goreleaser derives the version from the
+      # checked-out ref, and the branch tip is not the tag it just created.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release.outputs.version }}
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+          cache: true
+      # ghcr login is unconditional: goreleaser fails a `dockers:` push without it,
+      # and it is a no-op for a repo that only builds binaries.
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
