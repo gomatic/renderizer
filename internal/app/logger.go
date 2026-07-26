@@ -24,7 +24,7 @@ type (
 // callers that feed a domain Run take its address, since *slog.Logger is the
 // domain seam's conventional logger type.
 func NewLogger(w io.Writer, isVerbose Verbose, isDebug Debugging) slog.Logger {
-	return *log.LoggerConfig{LogLevel: level(isVerbose, isDebug)}.NewLogger(w)
+	return *log.LoggerConfig{Level: level(isVerbose, isDebug)}.NewLogger(w)
 }
 
 // level resolves the go-log textual level from the verbosity flags.
