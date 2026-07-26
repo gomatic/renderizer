@@ -32,13 +32,13 @@ jobs:
   # silently keeps serving whatever was last pushed by hand. A repo consumed as a
   # GitHub Action then runs stale code indefinitely while its source looks current.
   #
-  # Gated on a real bump and on the repo actually having a goreleaser config, so a
-  # library with nothing to publish skips cleanly rather than failing.
+  # Gated on a real bump, then on the repo actually having a goreleaser config, so
+  # a library with nothing to publish skips cleanly rather than failing. The
+  # config probe is a step rather than a job-level `if`: hashFiles is unavailable
+  # in that context, and nothing is checked out there to hash anyway.
   publish:
     needs: release
-    if: >-
-      needs.release.outputs.bumped == 'true' &&
-      hashFiles('.goreleaser.yml', '.goreleaser.yaml') != ''
+    if: needs.release.outputs.bumped == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -52,19 +52,31 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.release.outputs.version }}
           persist-credentials: false
+      - id: cfg
+        shell: bash
+        run: |
+          if [ -f .goreleaser.yml ] || [ -f .goreleaser.yaml ]; then
+            echo "present=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "present=false" >>"$GITHUB_OUTPUT"
+            echo "no goreleaser config — nothing to publish for this repo"
+          fi
       - uses: actions/setup-go@v5
+        if: steps.cfg.outputs.present == 'true'
         with:
           go-version-file: go.mod
           check-latest: true
           cache: true
-      # ghcr login is unconditional: goreleaser fails a `dockers:` push without it,
-      # and it is a no-op for a repo that only builds binaries.
+      # goreleaser fails a `dockers:` push without a registry login; for a repo
+      # that only builds binaries this is a harmless no-op.
       - uses: docker/login-action@v3
+        if: steps.cfg.outputs.present == 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: goreleaser/goreleaser-action@v6
+        if: steps.cfg.outputs.present == 'true'
         with:
           version: "~> v2"
           args: release --clean
