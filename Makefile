@@ -438,8 +438,30 @@ $(BINARIES): pre-build | $(BUILD_DIR)
 	@ln -sf $@-$(GOOS)-$(GOARCH) $(BUILD_DIR)/$@
 
 .PHONY: build-all
-build-all: pre-build ## Build binaries for all platforms
-	$(if $(BINARIES),$(GORELEASER) build --snapshot --clean,@echo "no BINARIES (no builds: in .goreleaser.yml) — nothing to build")
+build-all: pre-build ## Build binaries for all platforms (a library gets the portability matrix)
+	$(if $(BINARIES),$(GORELEASER) build --snapshot --clean,@$(MAKE) --no-print-directory portability)
+
+# PORTABILITY_TARGETS is the platform matrix a library is compiled for when it
+# has no binaries of its own to build. A library previously skipped build-all
+# entirely, so it could pass its gate while being unbuildable for the very
+# targets its consumers ship to: gomatic/go-sql called pg_query's cgo-only
+# functions directly, stayed green here, and broke the release build of every
+# CLI that imported it. CGO_ENABLED=0 is the point — it is the condition under
+# which a cgo-gated dependency vanishes.
+PORTABILITY_TARGETS ?= linux/amd64 linux/arm64 windows/amd64 darwin/arm64
+PORTABILITY_CHECKS  := $(addprefix portability@,$(PORTABILITY_TARGETS))
+
+# `go build ./...`, deliberately, after two alternatives were tried and rejected.
+# `go vet` also typechecks _test.go, and a cgo-gated library's tests legitimately
+# call the cgo-only API — consumers never build tests, so vet reports a failure
+# that is not one. `go build -o <dir>/ ./...` rejects a module with no main
+# packages ("no main packages to build"), which is precisely the library case
+# this target exists for. Plain build writes nothing for a library and is the
+# only one of the three that answers the actual question.
+.PHONY: portability $(PORTABILITY_CHECKS)
+portability: $(PORTABILITY_CHECKS) ## Compile the package set for each release target without cgo
+$(PORTABILITY_CHECKS): portability@%:
+	CGO_ENABLED=0 GOOS=$(firstword $(subst /, ,$*)) GOARCH=$(lastword $(subst /, ,$*)) go build ./...
 
 .PHONY: release
 release: pre-build ## Create a release with goreleaser
