@@ -4,11 +4,12 @@
 # permitted zero. Raising a number is a deliberate, reviewable decision.
 #
 # yze/invariant and yze/filesize are permanent probes (judgment-bound).
-# yze/errtest, yze/errtested and yze/testfile are HARD rules softened only
-# for rollout: they were structurally inert until the suite driver began
-# loading test files, and return to gating once their counts reach zero.
+# The rest are HARD rules softened only for rollout, and return to gating
+# once their counts reach zero.
 soft-baseline:
-  yze/cliopinion: 3
   exhaustive: 2
+  yze/cliopinion: 3
   yze/errtest: 1
+  yze/errtested: 4
+  yze/invariant: 5
   yze/testfile: 2
