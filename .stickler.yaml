@@ -1,0 +1,12 @@
+# Soft-finding baselines: how many non-gating findings this repository
+# currently carries, per rule. This is a RATCHET — the counts may only fall.
+# Exceeding one fails the build and names the rule; a rule absent here is
+# permitted zero. Raising a number is a deliberate, reviewable decision.
+#
+# yze/invariant and yze/filesize are permanent probes (judgment-bound).
+# yze/errtest, yze/errtested and yze/testfile are HARD rules softened only
+# for rollout: they were structurally inert until the suite driver began
+# loading test files, and return to gating once their counts reach zero.
+soft-baseline:
+  yze/errtest: 1
+  yze/testfile: 2
