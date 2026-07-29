@@ -21,6 +21,7 @@ linters:
     - dupl # duplicate code detection
     - durationcheck # catches bad time.Duration arithmetic
     - errorlint # correct error wrapping / comparison
+    - exhaustive # every value of an enum handled where it is discriminated
     - gocognit # cognitive complexity
     - goconst # repeated strings that should be constants
     - gocritic # opinionated diagnostics, performance, style
@@ -41,6 +42,14 @@ linters:
       min-complexity: 12
     gocognit:
       min-complexity: 7
+    exhaustive:
+      # A `default` clause does NOT count as exhaustive: a default that silently
+      # absorbs a newly added enum value is precisely the bug this catches, and
+      # no test will surface it. Scope is switches and map literals — the rule
+      # cannot see `if x != EnumConst`, which is the same defect wearing an
+      # if-statement and is left to review.
+      default-signifies-exhaustive: false
+      check: [switch, map]
     govet:
       enable-all: true
     gosec:
