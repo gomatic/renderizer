@@ -55,11 +55,17 @@ jobs:
       - id: cfg
         shell: bash
         run: |
-          if [ -f .goreleaser.yml ] || [ -f .goreleaser.yaml ]; then
+          # -s, not -f: an EMPTY .goreleaser.yml is not a configuration. A
+          # library repo that has nothing to publish carries the file as a
+          # zero-byte placeholder, and goreleaser given an empty config falls
+          # back to building the module root — which has no main — and fails
+          # every release, on every push, forever. Requiring a non-empty file
+          # makes the placeholder mean what it looks like it means.
+          if [ -s .goreleaser.yml ] || [ -s .goreleaser.yaml ]; then
             echo "present=true" >>"$GITHUB_OUTPUT"
           else
             echo "present=false" >>"$GITHUB_OUTPUT"
-            echo "no goreleaser config — nothing to publish for this repo"
+            echo "no goreleaser config to publish with — skipping"
           fi
       - uses: actions/setup-go@v5
         if: steps.cfg.outputs.present == 'true'
