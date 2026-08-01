@@ -42,15 +42,22 @@ type (
 	TestingEnabled bool
 )
 
-// validMissingKeys are the text/template "missingkey" option values; anything
-// else normalizes to "error".
-const defaultMissingKey MissingKey = "error"
+// The text/template "missingkey" option values. They are named rather than
+// spelled as literals at the switch so the valid set has one definition, and so
+// an exhaustiveness check can see it: a value added here without an arm below
+// is a value NormalizeMissingKey would silently rewrite to "error".
+const (
+	missingKeyZero    MissingKey = "zero"
+	defaultMissingKey MissingKey = "error"
+	missingKeyDefault MissingKey = "default"
+	missingKeyInvalid MissingKey = "invalid"
+)
 
 // NormalizeMissingKey returns key when it is a valid text/template missingkey
 // option and "error" otherwise.
 func NormalizeMissingKey(key MissingKey) MissingKey {
 	switch key {
-	case "zero", "error", "default", "invalid":
+	case missingKeyZero, defaultMissingKey, missingKeyDefault, missingKeyInvalid:
 		return key
 	}
 	return defaultMissingKey

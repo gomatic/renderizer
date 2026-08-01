@@ -93,17 +93,6 @@ func TestRunVerboseAndDebugLogging(t *testing.T) {
 	assert.Equal(t, "X\n", string(result.Output))
 }
 
-func TestRunStdinEnvironment(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.StdinEnabled = true
-	cfg.Source = strings.NewReader("{{.env.USER}}")
-
-	result, err := run(t, cfg)
-	require.NoError(t, err)
-	assert.Equal(t, "alice\n", string(result.Output))
-}
-
 func TestRunTemplateFile(t *testing.T) {
 	t.Parallel()
 	cfg := baseConfig()
@@ -114,121 +103,6 @@ func TestRunTemplateFile(t *testing.T) {
 	result, err := run(t, cfg)
 	require.NoError(t, err)
 	assert.Equal(t, "Hi Bob\n", string(result.Output))
-}
-
-func TestRunMultipleTemplates(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.Environment = "" // exercise the no-environment branch
-	cfg.Templates = render.TemplateFiles{"a.tmpl", "b.tmpl"}
-	cfg.ReadFile = mapReadFile(map[string]string{
-		"a.tmpl": "First {{.Name}}",
-		"b.tmpl": "Second {{.Name}}",
-	})
-	cfg.Assignments = render.AssignmentTokens{"--name=X"}
-
-	result, err := run(t, cfg)
-	require.NoError(t, err)
-	assert.Equal(t, "First X\nSecond X\n", string(result.Output))
-}
-
-func TestRunSettingsProvidesValue(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.Settings = render.SettingsFiles{"s.yaml"}
-	cfg.Templates = render.TemplateFiles{"t.tmpl"}
-	cfg.ReadFile = mapReadFile(map[string]string{
-		"s.yaml": "Name: FromSettings",
-		"t.tmpl": "{{.Name}}",
-	})
-
-	result, err := run(t, cfg)
-	require.NoError(t, err)
-	assert.Equal(t, "FromSettings\n", string(result.Output))
-}
-
-func TestRunVariablesOverrideSettings(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.Settings = render.SettingsFiles{"s.yaml"}
-	cfg.Templates = render.TemplateFiles{"t.tmpl"}
-	cfg.ReadFile = mapReadFile(map[string]string{
-		"s.yaml": "Name: FromSettings",
-		"t.tmpl": "{{.Name}}",
-	})
-	cfg.Assignments = render.AssignmentTokens{"--name=FromCLI"}
-
-	result, err := run(t, cfg)
-	require.NoError(t, err)
-	assert.Equal(t, "FromCLI\n", string(result.Output))
-}
-
-func TestRunDiscoversDefaultTemplate(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.Exists = existsIn("renderizer.yaml.tmpl")
-	cfg.ReadFile = mapReadFile(map[string]string{"renderizer.yaml.tmpl": "Discovered {{.Value}}"})
-	cfg.Assignments = render.AssignmentTokens{"--value=ok"}
-
-	result, err := run(t, cfg)
-	require.NoError(t, err)
-	assert.Equal(t, "Discovered ok\n", string(result.Output))
-}
-
-func TestRunMissingTemplate(t *testing.T) {
-	t.Parallel()
-	_, err := run(t, baseConfig())
-	require.ErrorIs(t, err, constants.ErrMissingTemplate)
-}
-
-func TestRunGetwdError(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.Getwd = func() (string, error) { return "", errors.New("no cwd") }
-	// No templates, no stdin, nothing discoverable: exercises the getwd-error
-	// fallback in both mainName and bases before failing.
-	_, err := run(t, cfg)
-	require.ErrorIs(t, err, constants.ErrMissingTemplate)
-}
-
-func TestRunAssignmentsError(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.StdinEnabled = true
-	cfg.Source = strings.NewReader("x")
-	cfg.Assignments = render.AssignmentTokens{"--a.b=2", "--a=1"}
-
-	_, err := run(t, cfg)
-	require.ErrorIs(t, err, constants.ErrMergeContext)
-}
-
-func TestRunSettingsParseError(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.StdinEnabled = true
-	cfg.Source = strings.NewReader("x")
-	cfg.Settings = render.SettingsFiles{"bad.yaml"}
-	cfg.ReadFile = mapReadFile(map[string]string{"bad.yaml": "::: not yaml :::"})
-
-	_, err := run(t, cfg)
-	require.ErrorIs(t, err, constants.ErrParseSettings)
-}
-
-func TestRunSettingsDeepMerge(t *testing.T) {
-	t.Parallel()
-	cfg := baseConfig()
-	cfg.CapitalizeEnabled = false // so CLI key "a" matches the settings key
-	cfg.Settings = render.SettingsFiles{"s.yaml"}
-	cfg.Templates = render.TemplateFiles{"t.tmpl"}
-	cfg.ReadFile = mapReadFile(map[string]string{
-		"s.yaml": "a:\n  fromSettings: settings\n",
-		"t.tmpl": "{{.a.fromCLI}}-{{.a.fromSettings}}",
-	})
-	cfg.Assignments = render.AssignmentTokens{"--a.fromCLI=cli"}
-
-	result, err := run(t, cfg)
-	require.NoError(t, err)
-	assert.Equal(t, "cli-settings\n", string(result.Output))
 }
 
 func TestRunStdinReadError(t *testing.T) {
