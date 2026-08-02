@@ -19,6 +19,13 @@ soft:
   - yze/testfile
 
 soft-baseline:
+  # yze/enumdiscrim (permanent probe) and yze/fuzzreq (rollout) baselines,
+  # recorded at the 2026-08-02 suite adoption. enumdiscrim findings are
+  # if-shaped discriminations of >2-member const groups awaiting adjudication
+  # (a deliberate fast path is legitimate; an incomplete discrimination is
+  # not). fuzzreq findings are exported parser surfaces owed an asserting
+  # fuzz target. Counts may only fall.
+  yze/fuzzreq: 3
   exhaustive: 0
   yze/clidomain: 0
   yze/errtest: 0
