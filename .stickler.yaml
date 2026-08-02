@@ -12,7 +12,7 @@
 # finding whatever number is recorded beside it.
 soft:
   - exhaustive
-  - yze/cliopinion
+  - yze/clidomain
   - yze/errtest
   - yze/errtested
   - yze/invariant
@@ -20,7 +20,7 @@ soft:
 
 soft-baseline:
   exhaustive: 0
-  yze/cliopinion: 0
+  yze/clidomain: 0
   yze/errtest: 0
   yze/errtested: 0
   yze/invariant: 0
