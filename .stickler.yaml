@@ -11,24 +11,22 @@
 # matching soft entry is inert — the rule stays hard and fails on its first
 # finding whatever number is recorded beside it.
 soft:
-  - exhaustive
-  - yze/clidomain
-  - yze/errtest
-  - yze/errtested
-  - yze/invariant
-  - yze/testfile
+  # `add` MERGES with the global soft list; a plain sequence would REPLACE
+  # it and silently harden every centrally-softened rule in this repo.
+  add:
+    - exhaustive
+    - yze/clidomain
+    - yze/errtest
+    - yze/errtested
+    - yze/invariant
+    - yze/testfile
 
 soft-baseline:
-  # yze/enumdiscrim (permanent probe) and yze/fuzzreq (rollout) baselines,
-  # recorded at the 2026-08-02 suite adoption. enumdiscrim findings are
-  # if-shaped discriminations of >2-member const groups awaiting adjudication
-  # (a deliberate fast path is legitimate; an incomplete discrimination is
-  # not). fuzzreq findings are exported parser surfaces owed an asserting
-  # fuzz target. Counts may only fall.
+  # Recorded from the 2026-08-02 full-suite sweep (stickler v0.10.0 /
+  # yze v0.31.0): the counts at first contact with the current soft rule
+  # set, on the ratchet — they may only fall. Probes (invariant, filesize,
+  # enumdiscrim) await adjudication; rollout rules (errtest, errtested,
+  # testfile, clidomain, cliflags, clilayout, fuzzreq, exhaustive) gate
+  # again at zero.
+  yze/cliflags: 1
   yze/fuzzreq: 3
-  exhaustive: 0
-  yze/clidomain: 0
-  yze/errtest: 0
-  yze/errtested: 0
-  yze/invariant: 0
-  yze/testfile: 0
