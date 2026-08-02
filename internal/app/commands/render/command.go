@@ -64,6 +64,7 @@ func Command(rt app.Runtime) *cli.Command {
 				Name:        "stdin",
 				Aliases:     []string{"c"},
 				Usage:       "read the template from stdin",
+				Sources:     cli.EnvVars("RENDERIZER_STDIN"),
 				Destination: (*bool)(&cfg.StdinEnabled),
 			},
 			&cli.BoolFlag{
