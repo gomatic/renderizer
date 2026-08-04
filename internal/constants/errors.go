@@ -19,4 +19,5 @@ const (
 	ErrReadSettings    errs.Const = "failed to read settings file"
 	ErrReadTemplate    errs.Const = "failed to read template"
 	ErrRenderPanic     errs.Const = "template rendering panicked"
+	ErrWriteOutput     errs.Const = "failed to write output"
 )
