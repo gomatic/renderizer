@@ -24,7 +24,7 @@ jobs:
       # Opt out per repo by committing a `.no-autorelease` file to the root: the
       # action detects it and no-ops, so re-distribution can't silently re-enable it.
       - id: tag
-        uses: nicerobot/tools.build/tag@v2.6.1
+        uses: nicerobot/tools.build/tag@v2
 
   # Publishing the tag's artifacts. Without this the tag job mints a version that
   # nothing ever builds: binaries are never attached to the release and, for a

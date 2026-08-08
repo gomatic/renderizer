@@ -92,6 +92,12 @@ linters:
         - name: var-naming
   exclusions:
     generated: lax
+    # node_modules is third-party JS dependency tooling; a bundled .go file
+    # inside it (e.g. flatted's Go port) is never the repo's code and no linter
+    # judges it. golangci-lint's default-excluded dirs cover vendor and testdata
+    # but not node_modules.
+    paths:
+      - (^|/)node_modules(/|$)
     presets:
       - comments
       - common-false-positives

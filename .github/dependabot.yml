@@ -56,3 +56,15 @@ updates:
       - dependency-name: "*"
         update-types:
           - version-update:semver-major
+      # First-party actions track a FLOATING MAJOR alias on purpose: `@v2` is
+      # how a gate fix reaches every repo without ~200 pull requests, and the
+      # alias is republished on each release. Dependabot cannot see that a bare
+      # `2` is an alias rather than a version, so it reads the newest 2.x as an
+      # available "update" and proposes pinning to it — which is a DOWNGRADE
+      # from "always newest 2.x" to "frozen at this one", and freezes CI there.
+      # It opened 75 such pull requests across the fleet before this rule.
+      #
+      # Ignoring version updates does NOT ignore security advisories: an
+      # advisory against a first-party action still opens a pull request, the
+      # same carve-out the major-version ignore above relies on.
+      - dependency-name: "nicerobot/*"
